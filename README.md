@@ -78,8 +78,8 @@ clouddrive2_account = your_username           # Your CloudDrive2 login username 
 clouddrive2_passwd = your_password             # Your CloudDrive2 login password (if needed)
 root_path = D:/CloudDrive/Media                # The path to scan AS SEEN BY THIS SCRIPT/OS
 clouddrive2_root_path = D:/CloudDrive          # The CloudDrive2 Mount Point Path AS CONFIGURED IN CloudDrive2
-Use code with caution.
-Markdown
+
+
 Explanation of Paths (Important!):
 
 clouddrvie2_address: The URL where your CloudDrive2 API is accessible.
@@ -173,13 +173,6 @@ PATH CONFIGURATION IS CRITICAL: Ensure Root Path to Scan and CloudDrive2 Mount P
 PERFORMANCE: Scanning large CloudDrive2 shares, especially over slower connections, can take a significant amount of time. The GUI might appear unresponsive during intense scanning or deletion phases – check the log for progress.
 
 LANGUAGE PREFERENCE: The selected language is saved in lang_pref.json in the application's directory.
-
-License
-(Optional: Specify your license here, e.g., MIT License, Apache 2.0, or state if it's proprietary)
-
-MIT License
-
-Copyright (c) [Year] [Your Name/Organization]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
