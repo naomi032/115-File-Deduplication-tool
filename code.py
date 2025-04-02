@@ -223,6 +223,17 @@ translations = {
         "warning_rule_failed_selection": "Internal Warning: {set_id} - Rule '{rule}' failed to select file to keep. Skipping deletion for this set.",
         "error_rule_application": "Error applying rule '{rule}' to {set_id}: {error}. Skipping deletion for this set.",
         "log_debug_calc_path": "[Debug] Calculated effective cloud scan path: '{fs_path}' from Scan='{scan_raw}', Mount='{mount_raw}'",
+        "log_debug_process_video": "[Debug] Processing Video: {path}",
+        "log_debug_attrs_received": "[Debug] Attrs received for {filename}: {attrs}",
+        "log_debug_raw_sha1": "[Debug] Raw SHA1 value (key '2'): {sha1}",
+        "log_debug_invalid_sha1_type": "[Debug] Invalid SHA1: Not a string ('{sha1}') for {path}. Skipping.",
+        "log_debug_invalid_sha1_empty": "[Debug] Invalid SHA1: Empty string for {path}. Skipping.",
+        "log_debug_standardized_sha1": "[Debug] Standardized SHA1: {sha1}",
+        "log_debug_hash_missing_or_invalid": "[Debug] 'fileHashes' or key '2' missing or hash invalid for {path}. SHA1 is None.",
+        "log_debug_skipping_no_sha1": "[Debug] SKIPPING file {filename} due to missing or invalid SHA1.",
+        "log_debug_storing_info": "[Debug] Storing file info for {filename} with SHA1: {sha1}",
+        # --- Added for path selection ---
+        "select_scan_path_dialog_title": "Select Root Directory to Scan",
     },
     "zh": {
         "window_title": "CloudDrive2 重复视频查找与删除工具",
@@ -353,6 +364,17 @@ translations = {
         "warning_rule_failed_selection": "内部警告：{set_id} - 规则 '{rule}' 未能选择要保留的文件。跳过此集合的删除。",
         "error_rule_application": "将规则 '{rule}' 应用于 {set_id} 时出错：{error}。跳过此集合的删除。",
         "log_debug_calc_path": "[调试] 根据 Scan='{scan_raw}', Mount='{mount_raw}' 计算出的有效云扫描路径: '{fs_path}'",
+        "log_debug_process_video": "[调试] 正在处理视频文件: {path}",
+        "log_debug_attrs_received": "[调试] 收到 {filename} 的属性: {attrs}",
+        "log_debug_raw_sha1": "[调试] 原始 SHA1 值 (键 '2'): {sha1}",
+        "log_debug_invalid_sha1_type": "[调试] 无效 SHA1: 不是字符串 ('{sha1}')，路径: {path}。正在跳过。",
+        "log_debug_invalid_sha1_empty": "[调试] 无效 SHA1: 空字符串，路径: {path}。正在跳过。",
+        "log_debug_standardized_sha1": "[调试] 标准化 SHA1: {sha1}",
+        "log_debug_hash_missing_or_invalid": "[调试] 路径 {path} 的 'fileHashes' 或键 '2' 缺失，或哈希无效。SHA1 为 None。",
+        "log_debug_skipping_no_sha1": "[调试] 因 SHA1 缺失或无效，正在跳过文件 {filename}。",
+        "log_debug_storing_info": "[调试] 正在存储文件 {filename} 的信息，SHA1 为: {sha1}",
+        # --- Added for path selection ---
+        "select_scan_path_dialog_title": "选择要扫描的根目录",
     }
 }
 
@@ -686,10 +708,11 @@ class DuplicateFileFinder:
                         default=f"[Debug] Calculated effective cloud scan path: '{fs_dir_path}' from Scan='{scan_path_raw}', Mount='{mount_point_raw}'"))
         return fs_dir_path
 
-
+    # <<< START OF MODIFIED find_duplicates METHOD >>>
     def find_duplicates(self):
         """
         Scans the configured cloud path for duplicate video files using SHA1 hash.
+        Handles path construction and standardizes SHA1 hash case.
         """
         if not self.fs:
             self.log(self._("error_not_connected", default="Error: Not connected to CloudDrive. Cannot scan."))
@@ -709,152 +732,185 @@ class DuplicateFileFinder:
         video_files_checked = 0
         errors_getting_attrs = 0
         files_skipped_no_sha1 = 0
-        key_errors_getting_hash = 0  # Counter for specific KeyError on hash lookup
+        key_errors_getting_hash = 0 # Specific counter for KeyError on hash lookup
 
         try:
+            # Call walk_path WITHOUT detail=True
             walk_iterator = self.fs.walk_path(fs_dir_path)
 
             for foldername, _, filenames in walk_iterator:
-                # Ensure foldername is treated as a string path segment
                 foldername_str = str(foldername)
 
                 for filename_obj in filenames:
                     count += 1
-                    filename_str = str(filename_obj)
+                    raw_filepath_str = str(filename_obj)
 
-                    # Log progress periodically
-                    if count % 500 == 0:
-                        self.log(self._("status_scan_progress", count=count, video_count=video_files_checked,
-                                        default=f"Scanned {count} items... Found {video_files_checked} videos."))
+                    if not raw_filepath_str: continue
 
-                    # Check if it's a video file based on extension
-                    file_extension = os.path.splitext(filename_str)[1].lower()
+                    # --- Path Construction ---
+                    path_for_storage = "" # Initialize
+                    if raw_filepath_str.startswith('/'):
+                        path_for_storage = raw_filepath_str
+                    elif '/' in raw_filepath_str:
+                        path_for_storage = '/' + raw_filepath_str
+                    else:
+                        path_for_storage = _build_full_path(foldername_str, raw_filepath_str)
+
+                    # --- Normalization ---
+                    while '//' in path_for_storage: path_for_storage = path_for_storage.replace('//', '/')
+                    if len(path_for_storage) > 1: path_for_storage = path_for_storage.rstrip('/')
+                    # Ensure it starts with / if not empty
+                    if path_for_storage and not path_for_storage.startswith('/'):
+                         path_for_storage = '/' + path_for_storage
+
+                    if not path_for_storage: continue # Skip if path ended up empty
+
+
+                    # --- Check Video Extension ---
+                    file_extension = os.path.splitext(path_for_storage)[1].lower()
                     if file_extension in VIDEO_EXTENSIONS:
                         video_files_checked += 1
-
-                        # --- Construct Full Path Correctly ---
-                        # Use helper function for proper cloud path joining
-                        path_for_storage = _build_full_path(foldername_str, filename_str)
+                        # Uncomment the line below for verbose logging of each video file path
+                        # self.log(self._("log_debug_process_video", path=path_for_storage, default=f"[Debug] Processing Video: {path_for_storage}"))
 
                         attrs = None
                         mod_time_dt = None
                         file_size = 0
-                        file_sha1 = None
+                        file_sha1_standardized = None # Use a variable for the standardized hash
 
                         try:
-                            # --- Call fs.attr with the normalized path ---
+                            # --- Get Attributes ---
                             attrs = self.fs.attr(path_for_storage)
+                            # Uncomment the line below for verbose logging of attributes
+                            # self.log(self._("log_debug_attrs_received", filename=os.path.basename(path_for_storage), attrs=attrs, default=f"[Debug] Attrs received for {os.path.basename(path_for_storage)}: {attrs}"))
 
-                            # --- Extract SHA1 Hash with KeyError Handling ---
+                            # --- Extract SHA1 Hash ---
+                            raw_sha1_value = None # Variable to hold the value as returned by the API
                             try:
                                 file_hashes_dict = attrs.get('fileHashes')
                                 if isinstance(file_hashes_dict, dict):
-                                    file_sha1 = file_hashes_dict.get('2')  # Key '2' for SHA1
-                                    # Validate SHA1 format/presence
-                                    if not isinstance(file_sha1, str) or not file_sha1:
-                                        file_sha1 = None
-                                    elif len(file_sha1) < 40: # Basic sanity check
-                                        self.log(self._("warning_hash_short",
-                                                         hash=file_sha1, path=path_for_storage,
-                                                         default=f"Warning: Suspiciously short SHA1 hash ('{file_sha1}') for '{path_for_storage}'. Skipping."))
-                                        file_sha1 = None
-                                else:
-                                    file_sha1 = None
+                                    raw_sha1_value = file_hashes_dict.get('2')
+                                    # Uncomment the line below for verbose logging of raw hash
+                                    # self.log(self._("log_debug_raw_sha1", sha1=raw_sha1_value, default=f"[Debug] Raw SHA1 value (key '2'): {raw_sha1_value}"))
 
-                            except KeyError as ke:
-                                # Specifically catch KeyError if 'fileHashes' or '2' is missing
-                                if key_errors_getting_hash < 10 or key_errors_getting_hash % 10 == 0: # Avoid flooding logs
-                                    self.log(self._("warning_hash_missing",
-                                                      path=path_for_storage, key_error=ke,
+                                    # Validate the raw SHA1 value
+                                    if isinstance(raw_sha1_value, str) and len(raw_sha1_value) >= 40:
+                                        # *** THE FIX: Standardize to UPPERCASE ***
+                                        file_sha1_standardized = raw_sha1_value.upper()
+                                        # Uncomment the line below for verbose logging of standardized hash
+                                        # self.log(self._("log_debug_standardized_sha1", sha1=file_sha1_standardized, default=f"[Debug] Standardized SHA1: {file_sha1_standardized}"))
+                                    else:
+                                        # Log why it was considered invalid
+                                        if not isinstance(raw_sha1_value, str):
+                                            self.log(self._("log_debug_invalid_sha1_type", sha1=raw_sha1_value, path=path_for_storage, default=f"[Debug] Invalid SHA1: Not a string ('{raw_sha1_value}') for {path_for_storage}. Skipping."))
+                                        elif not raw_sha1_value:
+                                             self.log(self._("log_debug_invalid_sha1_empty", path=path_for_storage, default=f"[Debug] Invalid SHA1: Empty string for {path_for_storage}. Skipping."))
+                                        else: # Must be too short
+                                             self.log(self._("warning_hash_short", hash=raw_sha1_value, path=path_for_storage, default=f"[Debug] Warning: Suspiciously short SHA1 hash ('{raw_sha1_value}') for '{path_for_storage}'. Skipping."))
+                                        # Ensure standardized value is None if invalid
+                                        file_sha1_standardized = None
+                                else:
+                                    # Log if 'fileHashes' or key '2' was missing
+                                    # self.log(self._("log_debug_hash_missing_or_invalid", path=path_for_storage, default=f"[Debug] 'fileHashes' or key '2' missing or hash invalid for {path_for_storage}. SHA1 is None."))
+                                    file_sha1_standardized = None
+
+                            except KeyError as ke: # Should not happen with .get()
+                                if key_errors_getting_hash < 10 or key_errors_getting_hash % 10 == 0:
+                                    self.log(self._("warning_hash_missing", path=path_for_storage, key_error=ke,
                                                       default=f"Warning: Hash data missing for '{path_for_storage}'. KeyError: {ke}. Skipping."))
                                 key_errors_getting_hash += 1
-                                errors_getting_attrs += 1
-                                file_sha1 = None
+                                errors_getting_attrs += 1 # Count as attribute error
+                                file_sha1_standardized = None # Ensure it's None
 
-                            if not file_sha1:
+
+                            # --- Check if standardized SHA1 is valid ---
+                            if not file_sha1_standardized:
+                                # self.log(self._("log_debug_skipping_no_sha1", filename=os.path.basename(path_for_storage), default=f"[Debug] SKIPPING file {os.path.basename(path_for_storage)} due to missing or invalid SHA1."))
                                 files_skipped_no_sha1 += 1
-                                continue # Skip this file if no valid SHA1
+                                continue # Skip this file
 
-                            # --- Extract and Parse Modification Time ---
+                            # --- If SHA1 is valid, extract other attributes and store ---
+                            # self.log(self._("log_debug_storing_info", filename=os.path.basename(path_for_storage), sha1=file_sha1_standardized, default=f"[Debug] Storing file info for {os.path.basename(path_for_storage)} with SHA1: {file_sha1_standardized}"))
+
                             mod_time_str = attrs.get('modifiedTime')
                             mod_time_dt = _parse_datetime(mod_time_str)
                             if mod_time_dt is None and mod_time_str:
-                                self.log(self._("error_parse_date", path=path_for_storage,
-                                                error=f"Unparseable string '{mod_time_str}'",
+                                self.log(self._("error_parse_date", path=path_for_storage, error=f"Unparseable string '{mod_time_str}'",
                                                 default=f"Warning: Could not parse date '{mod_time_str}' for {path_for_storage}"))
-                                # Do not increment errors_getting_attrs here, only parse error
 
-                            # --- Extract Size ---
                             size_val = attrs.get('size', 0)
                             try:
                                 file_size = int(size_val) if size_val is not None else 0
                             except (ValueError, TypeError):
-                                self.log(self._("warning_size_invalid",
-                                                  size=size_val, path=path_for_storage,
+                                self.log(self._("warning_size_invalid", size=size_val, path=path_for_storage,
                                                   default=f"Warning: Invalid size value '{size_val}' for {path_for_storage}. Using 0."))
                                 file_size = 0
-                                # Do not increment errors_getting_attrs here, only size error
 
-                            # --- Store File Info ---
                             file_info = {
-                                'path': path_for_storage, # Store the normalized path
+                                'path': path_for_storage,
                                 'modified': mod_time_dt,
                                 'size': file_size,
-                                'sha1': file_sha1
+                                # Store the STANDARDIZED hash in the info dict as well for consistency
+                                'sha1': file_sha1_standardized
                             }
-                            potential_duplicates[file_sha1].append(file_info)
+                            # Use the STANDARDIZED hash as the dictionary key
+                            potential_duplicates[file_sha1_standardized].append(file_info)
 
                         except FileNotFoundError as fnf_e:
-                            # Log using the normalized path for consistency
                             err_msg = self._("error_get_attrs", path=path_for_storage, error=fnf_e,
-                                             default=f"Error getting attributes for {path_for_storage}: {fnf_e}")
+                                             default=f"Error getting attributes/hash for '{path_for_storage}': {fnf_e}")
                             self.log(err_msg)
                             errors_getting_attrs += 1
-                            # Log gRPC details if available
                             if hasattr(fnf_e, 'args') and len(fnf_e.args) > 1:
-                                grpc_details = str(fnf_e.args[1])
-                                self.log(f"    FNF Detail: {grpc_details}")
+                                try:
+                                     detail = str(fnf_e.args[1])
+                                     if isinstance(detail, (dict, str)) and 'error: not found' in str(detail):
+                                         self.log(f"    FNF Detail: {detail}")
+                                except Exception: pass
+
                         except Exception as e:
-                            # Log using the normalized path for consistency in logs
                             err_msg = self._("error_get_attrs", path=path_for_storage, error=e,
-                                             default=f"Error getting attributes for {path_for_storage}: {e}")
+                                             default=f"Error getting attributes/hash for '{path_for_storage}': {e}")
                             self.log(err_msg)
                             self.log(f"Attribute Error Details: {traceback.format_exc(limit=2)}")
                             errors_getting_attrs += 1
+
+                    # --- Log progress periodically ---
+                    if count % 200 == 0:
+                        self.log(self._("status_scan_progress", count=count, video_count=video_files_checked,
+                                        default=f"Scanned {count} items... Found {video_files_checked} videos."))
+
 
             # --- Scan finished ---
             end_time = time.time()
             duration = end_time - start_time
             self.log(self._("status_scan_finished_duration", duration=duration, default=f"Scan finished in {duration:.2f} seconds."))
-            self.log(self._("status_scan_summary_items", count=count, video_count=video_files_checked, default=f"Total items: {count}. Videos processed: {video_files_checked}."))
+            self.log(self._("status_scan_summary_items", count=count, video_count=video_files_checked, default=f"Total items encountered: {count}. Video files processed: {video_files_checked}."))
 
-            # Report errors/skips encountered
+            # --- Report errors/skips encountered (using updated counters) ---
             warning_parts = []
-            if errors_getting_attrs > 0: warning_parts.append(
-                f"Encountered {errors_getting_attrs} errors retrieving attributes")
-            if key_errors_getting_hash > 0: warning_parts.append(f"{key_errors_getting_hash} files missing hash data")
-            if files_skipped_no_sha1 > key_errors_getting_hash:
-                other_skips = files_skipped_no_sha1 - key_errors_getting_hash
-                warning_parts.append(f"{other_skips} skipped for other SHA1 reasons")
+            if errors_getting_attrs > 0: warning_parts.append(f"Encountered {errors_getting_attrs} errors retrieving attributes")
+            # Now use files_skipped_no_sha1 directly as it's incremented when SHA1 is missing/invalid
+            if files_skipped_no_sha1 > 0: warning_parts.append(f"{files_skipped_no_sha1} video files skipped due to missing/invalid SHA1")
 
             if warning_parts:
                 self.log(self._("status_scan_warnings", details='; '.join(warning_parts), default=f"WARNING: {'; '.join(warning_parts)}."))
 
             # --- Filter for actual duplicates ---
+            # This check will now work correctly because keys are case-standardized
             actual_duplicates = {sha1: files for sha1, files in potential_duplicates.items() if len(files) > 1}
 
             # Report findings
             if actual_duplicates:
-                num_sets = len(actual_duplicates)
-                num_files = sum(len(files) for files in actual_duplicates.values())
-                self.log(self._("find_complete_found", count=num_sets,
-                                default=f"Found {num_sets} duplicate sets ({num_files} total duplicate files)."))
+                 num_sets = len(actual_duplicates)
+                 num_files = sum(len(files) for files in actual_duplicates.values())
+                 self.log(self._("find_complete_found", count=num_sets, default=f"Scan complete. Found {num_sets} duplicate sets ({num_files} total duplicate files)."))
             else:
-                no_dups_msg = self._("find_complete_none",
-                                     default="Scan complete. No duplicate video files found based on SHA1 hash.")
-                if files_skipped_no_sha1 > 0:
-                    no_dups_msg += f" (Note: {files_skipped_no_sha1} video file(s) were skipped due to missing/invalid SHA1 hash.)"
-                self.log(no_dups_msg)
+                 no_dups_msg = self._("find_complete_none", default="Scan complete. No duplicate video files found based on SHA1 hash.")
+                 # Add skip reason only if skips occurred
+                 if files_skipped_no_sha1 > 0:
+                     no_dups_msg += f" (Note: {files_skipped_no_sha1} video file(s) were skipped due to missing/invalid SHA1.)"
+                 self.log(no_dups_msg)
 
             return actual_duplicates
 
@@ -863,8 +919,9 @@ class DuplicateFileFinder:
             err_msg = self._("error_scan_path", path=fs_dir_path, error=walk_e,
                              default=f"Critical error walking cloud path '{fs_dir_path}': {walk_e}")
             self.log(err_msg)
-            self.log(f"Walk Error Details: {traceback.format_exc()}")
+            self.log(f"Walk Error Details: {traceback.format_exc()}") # Log traceback for walk error
             return {}
+    # <<< END OF MODIFIED find_duplicates METHOD >>>
 
     def write_duplicates_report(self, duplicate_sets, output_file):
         """ Writes the dictionary of found duplicate file sets to a text file. """
@@ -971,6 +1028,7 @@ class DuplicateFileFinder:
                  self.log(self._("warning_delete_failures_more", count=num_errors - 10, default=f"  ... and {num_errors - 10} more."))
 
         return deleted_count, total_to_delete
+# --- End of DuplicateFileFinder Class ---
 
 
 # --- GUI Application Class ---
@@ -1075,6 +1133,8 @@ class DuplicateFinderApp:
         # Place in master grid, row 0
         config_frame.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="ew") # Top padding
         config_frame.columnconfigure(1, weight=1) # Entries expand horizontally
+        # >>> ADDED: Add columnconfigure for the browse button (column 2), no weight
+        config_frame.columnconfigure(2, weight=0)
         self.widgets["config_frame"] = config_frame
 
         # Define config fields: (internal_key, label_translation_key, grid_row)
@@ -1082,7 +1142,7 @@ class DuplicateFinderApp:
             ("address", "address_label", 0),
             ("account", "account_label", 1),
             ("password", "password_label", 2),
-            ("scan_path", "scan_path_label", 3),
+            ("scan_path", "scan_path_label", 3), # This is the row we modify
             ("mount_point", "mount_point_label", 4),
         ]
 
@@ -1097,8 +1157,20 @@ class DuplicateFinderApp:
             if key == "password":
                 entry_args["show"] = "*"
             entry = ttk.Entry(config_frame, **entry_args)
+            # >>> MODIFIED: Grid the entry in column 1, sticky EW
             entry.grid(row=row, column=1, padx=(2, 5), pady=3, sticky=tk.EW)
             self.entries[key] = entry
+
+            # <<< START MODIFICATION: Add Browse button for scan_path >>>
+            if key == "scan_path":
+                browse_button = ttk.Button(config_frame, text="...",
+                                           command=self.select_scan_path, # New callback method
+                                           width=3) # Make the button small
+                # Grid the button in column 2
+                browse_button.grid(row=row, column=2, padx=(0, 5), pady=3, sticky=tk.W)
+                self.widgets["select_scan_path_button"] = browse_button
+            # <<< END MODIFICATION >>>
+
 
         # --- 2. Action Buttons Frame (Load, Save, Test, Find) ---
         action_button_frame = ttk.Frame(master, padding=(5, 0))
@@ -1356,6 +1428,7 @@ class DuplicateFinderApp:
                 "find_button": "find_button",
                 "delete_button": "delete_by_rule_button",
                 "save_list_button": "save_list_button",
+                # Note: select_scan_path_button text is fixed as "..."
             }
             for widget_key, text_key in button_keys.items():
                 widget = self.widgets.get(widget_key)
@@ -1673,6 +1746,23 @@ class DuplicateFinderApp:
              self.log_message(error_msg)
              self.log_message(traceback.format_exc())
 
+    # <<< NEW METHOD >>>
+    def select_scan_path(self):
+        """Opens a directory selection dialog and updates the scan path entry."""
+        dialog_title = self._("select_scan_path_dialog_title", default="Select Root Scan Directory")
+        # Ask the user to select a directory
+        selected_directory = filedialog.askdirectory(
+            title=dialog_title,
+            parent=self.master # Make dialog modal to the main window
+        )
+
+        # If a directory was selected (user didn't cancel)
+        if selected_directory:
+            # Update the StringVar, which updates the Entry widget automatically
+            self.string_vars["scan_path"].set(selected_directory)
+            self.log_message(f"Scan path set to: {selected_directory}")
+    # <<< END NEW METHOD >>>
+
     def _check_path_chars(self, path_dict):
         """
         Validates characters in specified path inputs using _validate_path_chars helper.
@@ -1740,6 +1830,8 @@ class DuplicateFinderApp:
         config_button_state = tk.NORMAL if is_idle_state else tk.DISABLED
         find_button_state = tk.NORMAL if is_idle_state and is_connected else tk.DISABLED
         rules_radio_state = tk.NORMAL if is_idle_state and is_connected and has_duplicates else tk.DISABLED
+        # >>> ADDED: Control scan path browse button state <<<
+        scan_path_browse_button_state = tk.NORMAL if is_idle_state else tk.DISABLED
 
         # Suffix entry/label only enabled if the suffix rule is selected AND other conditions met
         suffix_widgets_state = tk.DISABLED
@@ -1764,6 +1856,12 @@ class DuplicateFinderApp:
              if widget and widget.winfo_exists():
                  try: widget.config(state=config_button_state)
                  except tk.TclError: pass
+
+        # >>> ADDED: Set state for scan path browse button <<<
+        widget = self.widgets.get("select_scan_path_button")
+        if widget and widget.winfo_exists():
+            try: widget.config(state=scan_path_browse_button_state)
+            except tk.TclError: pass
 
         widget = self.widgets.get("find_button")
         if widget and widget.winfo_exists():
@@ -2690,10 +2788,13 @@ class DuplicateFinderApp:
             scan_start_time = time.time()
             try:
                 # Use walk_path to iterate through files recursively
-                for _, _, filenames in self.finder.fs.walk_path(fs_dir_path):
+                for dirpath, _, filenames in self.finder.fs.walk_path(fs_dir_path):
                     for filename_obj in filenames:
                         try:
-                            filename = str(filename_obj)  # Ensure filename is a string
+                            # Construct full path correctly using dirpath and filename
+                            full_path = _build_full_path(str(dirpath), str(filename_obj))
+                            filename = os.path.basename(full_path) # Extract just the filename
+
                             total_files += 1
                             # Get extension, handle files with no extension
                             _root, ext = os.path.splitext(filename)
@@ -2703,7 +2804,7 @@ class DuplicateFinderApp:
                         except Exception as inner_e:
                             # Log errors processing individual filenames during scan
                             self.log_message(
-                                f"Warning: Error processing filename '{filename_obj}' during chart scan: {inner_e}")
+                                f"Warning: Error processing filename '{filename_obj}' in '{dirpath}' during chart scan: {inner_e}")
 
             except Exception as e:
                 # Catch errors during the walk_path operation itself
