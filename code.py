@@ -104,17 +104,16 @@ translations = {
         "address_label": "API Address:",
         "account_label": "Account:",
         "password_label": "Password:",
-        # <<< MODIFICATION: Updated label for scan paths >>>
         "scan_paths_label": "Root Paths to Scan:",
         "add_path_button": "Add Path",
         "remove_path_button": "Remove Selected",
-        # <<< END MODIFICATION >>>
         "mount_point_label": "CloudDrive Mount Point:",
         "load_config_button": "Load Config",
         "save_config_button": "Save Config",
         "test_connection_button": "Test Connection",
         "find_button": "Find Duplicates",
-        "rules_title": "Deletion Rules (Select one to mark files)", # Clarified purpose
+        # <<< MODIFICATION: Changed title slightly for clarity >>>
+        "rules_title": "Apply Suggestion Rule (Click 'Action' to Manually Change)",
         "rule_shortest_path": "Keep file with shortest path",
         "rule_longest_path": "Keep file with longest path",
         "rule_oldest": "Keep oldest file (Modified Date)",
@@ -129,7 +128,8 @@ translations = {
         "tree_action_keep": "Keep",
         "tree_action_delete": "Delete",
         "tree_set_col_value": "{index}", # Simple index for set number
-        "delete_by_rule_button": "Delete Marked Files",
+        # <<< MODIFICATION: Renamed button slightly >>>
+        "delete_selected_button": "Delete Marked Files",
         "save_list_button": "Save Report",
         "show_chart_button": "Show File Types Chart",
         "show_chart_button_disabled": "Show Chart (Install matplotlib)",
@@ -148,26 +148,29 @@ translations = {
         "status_scan_progress": "Path '{path}': Scanned {count} items... Found {video_count} videos.",
         "status_populating_tree": "Populating list with {count} duplicate sets...",
         "status_tree_populated": "Results list populated.",
-        "status_clearing_tree": "Clearing results list and rule selection...", # Updated log message
-        "status_applying_rule": "Applying rule '{rule_name}' to {count} sets...",
-        "status_rule_applied": "Rule applied. {delete_count} files marked for deletion.",
+        "status_clearing_tree": "Clearing results list and rule selection...",
+        # <<< MODIFICATION: Adjusted rule log message >>>
+        "status_applying_rule": "Applying suggestion rule '{rule_name}' to {count} sets...",
+        "status_rule_applied": "Rule suggestion applied. {delete_count} files initially marked for deletion. Click 'Action' column to change.",
         "find_starting": "Starting duplicate file scan across {num_paths} path(s)...",
         "find_scan_path_start": "Scanning path: '{path}'...",
         "find_complete_found": "Scan complete. Found {count} duplicate sets across all paths.",
         "find_complete_none": "Scan complete. No duplicate video files found based on SHA1 hash across all paths.",
         "find_error_during": "Error during duplicate scan: {error}",
         "find_error_processing_path": "Error processing scan path '{path}': {error}. Skipping this path.", # Added
-        "delete_starting": "Starting deletion based on rule: {rule_name}...",
-        "delete_finished": "Deletion complete. Attempted to delete {total_marked} files. Successfully deleted {deleted_count}.", # Clarified wording
+        # <<< MODIFICATION: Renamed delete log messages >>>
+        "delete_starting_selected": "Starting deletion of manually marked files...",
+        "delete_finished": "Deletion complete. Attempted to delete {total_marked} files. Successfully deleted {deleted_count}.",
         "delete_results_cleared": "Deletion process finished. Results list cleared, please re-scan if needed.", # Added completion message
         "delete_error_during": "Error during deletion process: {error}",
         "delete_error_file": "Error deleting {path}: {error}",
         "delete_cancelled": "Deletion cancelled by user.",
         "delete_confirm_title": "Confirm Deletion",
-        "delete_confirm_msg": "Delete marked files based on rule: '{rule_name}'?\nTHIS ACTION CANNOT BE UNDONE.",
-        "delete_no_rule_selected": "No deletion rule selected.",
-        "delete_rule_no_files": "No files are currently marked for deletion based on the applied rule.", # Changed wording for clarity
-        "delete_suffix_missing": "Suffix is required for the 'Keep Suffix' rule.",
+        # <<< MODIFICATION: Changed confirm message wording >>>
+        "delete_confirm_msg": "Permanently delete all files marked 'Delete' in the list?\nTHIS ACTION CANNOT BE UNDONE.",
+        "delete_no_rule_selected": "No deletion rule selected.", # Still relevant for applying suggestions
+        "delete_no_files_marked": "No files are currently marked for deletion in the list.", # New message
+        "delete_suffix_missing": "Suffix is required for the 'Keep Suffix' rule suggestion.",
         "save_report_header": "Duplicate Video File Sets Found (Based on SHA1):",
         "save_report_set_header": "Set {index} (SHA1: {sha1}) - {count} files",
         "save_report_file_label": "  - File:",
@@ -184,14 +187,12 @@ translations = {
         "error_scan_path": "Critical error walking cloud path '{path}': {error}",
         "error_get_attrs": "Error getting attributes/hash for '{path}': {error}",
         "error_parse_date": "Warning: Could not parse modification date for '{path}': {error}. Skipping date comparison for this file.",
-        "error_no_duplicates_found": "No duplicates were found or displayed. Cannot apply deletion rule.",
+        "error_no_duplicates_found": "No duplicates were found or displayed. Cannot apply deletion rule.", # Still used internally for rule logic
         "error_not_connected": "Error: Not connected to CloudDrive2. Please test connection first.",
         "error_path_calc_failed": "Error: Could not determine a valid cloud scan path from Scan Path '{scan}' and Mount Point '{mount}'. Check inputs.",
-        # <<< MODIFICATION: Updated missing input error message >>>
         "error_input_missing": "API Address, Account, Mount Point are required. At least one Scan Path must be added.",
         "error_input_missing_conn": "API Address, Account, and Mount Point are required for connection test.",
         "error_input_missing_chart": "Mount Point is required and at least one Scan Path must be added to generate the chart.",
-        # <<< END MODIFICATION >>>
         "error_config_read": "Error reading config file: {error}",
         "error_config_save": "Could not write config file: {error}",
         "error_unexpected": "Unexpected error: {error}",
@@ -218,7 +219,6 @@ translations = {
         "chart_label_others": "Others",
         "chart_label_no_extension": "[No Ext]",
         "tie_break_log_prefix": "Tie-Break:", # Added for rule tie-break logging
-        # --- Added/Modified for Finder logging ---
         "status_test_connection_step": "Testing connection by attempting to list root directory ('/')...",
         "status_scan_finished_duration": "Scan for path '{path}' finished in {duration:.2f} seconds.",
         "status_scan_summary_items": "Path '{path}': Total items encountered: {count}. Video files processed: {video_count}.",
@@ -232,10 +232,10 @@ translations = {
         "warning_delete_failures_more": "  ... and {count} more.",
         "status_delete_no_files": "No files provided for deletion.",
         "warning_tie_break": "{prefix} {reason}. Kept '{filename}' ({detail})",
-        "warning_rule_no_date": "Warning: {set_id} - Cannot apply '{rule}': No valid dates. Keeping shortest path.",
-        "warning_rule_no_suffix_match": "Warning: {set_id} - No files match suffix '{suffix}'. Keeping shortest path.",
-        "warning_rule_failed_selection": "Internal Warning: {set_id} - Rule '{rule}' failed to select file to keep. Skipping deletion for this set.",
-        "error_rule_application": "Error applying rule '{rule}' to {set_id}: {error}. Skipping deletion for this set.",
+        "warning_rule_no_date": "Warning: {set_id} - Cannot apply suggestion '{rule}': No valid dates. Defaulting to shortest path.",
+        "warning_rule_no_suffix_match": "Warning: {set_id} - No files match suffix '{suffix}'. Defaulting to shortest path.",
+        "warning_rule_failed_selection": "Internal Warning: {set_id} - Rule '{rule}' failed to select file to keep. Skipping suggestion for this set.",
+        "error_rule_application": "Error applying suggestion rule '{rule}' to {set_id}: {error}. Skipping suggestion for this set.",
         "log_debug_calc_path": "[Debug] Calculated effective cloud scan path: '{fs_path}' from Scan='{scan_raw}', Mount='{mount_raw}'",
         "log_debug_process_video": "[Debug] Processing Video: {path}",
         "log_debug_attrs_received": "[Debug] Attrs received for {filename}: {attrs}",
@@ -247,10 +247,11 @@ translations = {
         "log_debug_skipping_no_sha1": "[Debug] SKIPPING file {filename} due to missing or invalid SHA1.",
         "log_debug_storing_info": "[Debug] Storing file info for {filename} with SHA1: {sha1}",
         "log_debug_merging_results": "[Debug] Merging results from path '{path}'. Current total sets: {count}.",
-        # --- Added for path selection ---
         "select_scan_path_dialog_title": "Select Root Directory to Scan",
-        "error_no_scan_paths_added": "Error: No scan paths have been added. Please add at least one path.", # Added
-        "scan_path_already_exists": "Path '{path}' already exists in the list.", # Added
+        "error_no_scan_paths_added": "Error: No scan paths have been added. Please add at least one path.",
+        "scan_path_already_exists": "Path '{path}' already exists in the list.",
+        # <<< MODIFICATION: Added new translation >>>
+        "info_last_keep_in_set": "Info: Cannot mark '{filename}' for deletion as it's the only file marked 'Keep' in Set {set_id}.",
     },
     "zh": {
         "window_title": "CloudDrive2 重复视频查找与删除工具",
@@ -258,17 +259,16 @@ translations = {
         "address_label": "API 地址:",
         "account_label": "账户:",
         "password_label": "密码:",
-        # <<< MODIFICATION: Updated label for scan paths >>>
         "scan_paths_label": "要扫描的根路径:",
         "add_path_button": "添加路径",
         "remove_path_button": "删除选中",
-        # <<< END MODIFICATION >>>
         "mount_point_label": "CloudDrive 挂载点:",
         "load_config_button": "加载配置",
         "save_config_button": "保存配置",
         "test_connection_button": "测试连接",
         "find_button": "查找重复项",
-        "rules_title": "删除规则 (选择一项以标记文件)", # 澄清目的
+        # <<< MODIFICATION: Changed title slightly for clarity >>>
+        "rules_title": "应用建议规则 (点击'操作'列手动更改)",
         "rule_shortest_path": "保留路径最短的文件",
         "rule_longest_path": "保留路径最长的文件",
         "rule_oldest": "保留最旧的文件 (修改日期)",
@@ -283,7 +283,8 @@ translations = {
         "tree_action_keep": "保留",
         "tree_action_delete": "删除",
         "tree_set_col_value": "{index}", # 集合编号
-        "delete_by_rule_button": "删除标记文件",
+        # <<< MODIFICATION: Renamed button slightly >>>
+        "delete_selected_button": "删除标记文件",
         "save_list_button": "保存报告",
         "show_chart_button": "显示文件类型图表",
         "show_chart_button_disabled": "显示图表 (需安装 matplotlib)",
@@ -302,26 +303,29 @@ translations = {
         "status_scan_progress": "路径 '{path}': 已扫描 {count} 个项目... 找到 {video_count} 个视频。",
         "status_populating_tree": "正在使用 {count} 个重复集合填充列表...",
         "status_tree_populated": "结果列表已填充。",
-        "status_clearing_tree": "正在清除结果列表和规则选择...", # 更新
-        "status_applying_rule": "正在对 {count} 个集合应用规则 '{rule_name}'...",
-        "status_rule_applied": "规则已应用。{delete_count} 个文件被标记为删除。",
+        "status_clearing_tree": "正在清除结果列表和规则选择...",
+        # <<< MODIFICATION: Adjusted rule log message >>>
+        "status_applying_rule": "正在对 {count} 个集合应用建议规则 '{rule_name}'...",
+        "status_rule_applied": "规则建议已应用。初始有 {delete_count} 个文件被标记为删除。点击'操作'列进行更改。",
         "find_starting": "开始在 {num_paths} 个路径中扫描重复文件...",
         "find_scan_path_start": "正在扫描路径: '{path}'...",
         "find_complete_found": "扫描完成。在所有路径中共找到 {count} 个重复集合。",
         "find_complete_none": "扫描完成。未在所有路径中根据 SHA1 哈希找到重复的视频文件。",
         "find_error_during": "扫描重复项期间出错: {error}",
         "find_error_processing_path": "处理扫描路径 '{path}' 时出错: {error}。正在跳过此路径。", # 新增
-        "delete_starting": "开始根据规则删除: {rule_name}...",
-        "delete_finished": "删除完成。尝试删除 {total_marked} 个文件。成功删除了 {deleted_count} 个。", # 澄清措辞
-        "delete_results_cleared": "删除过程结束。结果列表已清除，如需请重新扫描。", # 新增
+        # <<< MODIFICATION: Renamed delete log messages >>>
+        "delete_starting_selected": "开始删除手动标记的文件...",
+        "delete_finished": "删除完成。尝试删除 {total_marked} 个文件。成功删除了 {deleted_count} 个。",
+        "delete_results_cleared": "删除过程结束。结果列表已清除，如需请重新扫描。",
         "delete_error_during": "删除过程中出错: {error}",
         "delete_error_file": "删除 {path} 时出错: {error}",
         "delete_cancelled": "用户取消了删除操作。",
         "delete_confirm_title": "确认删除",
-        "delete_confirm_msg": "根据规则 '{rule_name}' 删除标记的文件吗？\n此操作无法撤销。",
-        "delete_no_rule_selected": "未选择删除规则。",
-        "delete_rule_no_files": "根据当前应用的规则，没有文件被标记为删除。", # 更改措辞
-        "delete_suffix_missing": "“保留后缀”规则需要填写后缀。",
+        # <<< MODIFICATION: Changed confirm message wording >>>
+        "delete_confirm_msg": "永久删除列表中所有标记为“删除”的文件吗？\n此操作无法撤销。",
+        "delete_no_rule_selected": "未选择删除规则。", # Still relevant for applying suggestions
+        "delete_no_files_marked": "列表中当前没有文件被标记为删除。", # New message
+        "delete_suffix_missing": "“保留后缀”规则建议需要填写后缀。",
         "save_report_header": "找到的重复视频文件集合 (基于 SHA1):",
         "save_report_set_header": "集合 {index} (SHA1: {sha1}) - {count} 个文件",
         "save_report_file_label": "  - 文件:",
@@ -333,19 +337,17 @@ translations = {
         "error_input_title": "输入错误",
         "error_config_title": "配置错误",
         "error_config_save_title": "配置保存错误",
-        "error_rule_title": "规则错误", # 新增
+        "error_rule_title": "规则错误",
         "error_connect": "连接 CloudDrive2 API '{address}' 时出错: {error}",
         "error_scan_path": "遍历云端路径 '{path}' 时发生严重错误: {error}",
         "error_get_attrs": "获取 '{path}' 的属性/哈希时出错: {error}",
         "error_parse_date": "警告: 无法解析 '{path}' 的修改日期: {error}。将跳过此文件的日期比较。",
-        "error_no_duplicates_found": "未找到或显示重复项。无法应用删除规则。",
+        "error_no_duplicates_found": "未找到或显示重复项。无法应用删除规则。", # Still used internally
         "error_not_connected": "错误：未连接到 CloudDrive2。请先测试连接。",
         "error_path_calc_failed": "错误：无法根据扫描路径 '{scan}' 和挂载点 '{mount}' 确定有效的云端扫描路径。请检查输入。",
-        # <<< MODIFICATION: Updated missing input error message >>>
         "error_input_missing": "API 地址、账户、挂载点为必填项。必须添加至少一个扫描路径。",
         "error_input_missing_conn": "测试连接需要 API 地址、账户和挂载点。",
         "error_input_missing_chart": "生成图表需要挂载点，且必须添加至少一个扫描路径。",
-        # <<< END MODIFICATION >>>
         "error_config_read": "读取配置文件时出错: {error}",
         "error_config_save": "无法写入配置文件: {error}",
         "error_unexpected": "意外错误: {error}",
@@ -363,16 +365,15 @@ translations = {
         "chart_error_no_connection": "无法生成图表：未连接到 CloudDrive2。",
         "chart_error_cloud_scan": "扫描云端路径 '{path}' 以获取图表数据时出错: {error}",
         "chart_status_scanning_cloud": "正在扫描云端路径 '{path}' 以获取文件类型 (可能需要一些时间)...",
-        "chart_status_scan_paths_start": "开始在 {num_paths} 个路径中扫描图表数据...", # 新增
-        "chart_status_scan_path_complete": "完成扫描路径 '{path}'。", # 新增
+        "chart_status_scan_paths_start": "开始在 {num_paths} 个路径中扫描图表数据...",
+        "chart_status_scan_path_complete": "完成扫描路径 '{path}'。",
         "chart_status_generating": "所有路径扫描完成。正在为 {count} 种文件类型 ({total} 个文件) 生成图表...",
         "chart_status_no_files_found": "所有路径扫描完成。未找到任何文件。无法生成图表。",
-        "chart_window_title": "扫描路径中的文件类型分布", # 更新
+        "chart_window_title": "扫描路径中的文件类型分布",
         "chart_legend_title": "文件扩展名",
         "chart_label_others": "其他",
         "chart_label_no_extension": "[无扩展名]",
-        "tie_break_log_prefix": "规则冲突解决:", # 新增，用于规则冲突日志
-        # --- Added/Modified for Finder logging ---
+        "tie_break_log_prefix": "规则冲突解决:",
         "status_test_connection_step": "正在通过尝试列出根目录 ('/') 来测试连接...",
         "status_scan_finished_duration": "路径 '{path}' 的扫描耗时 {duration:.2f} 秒完成。",
         "status_scan_summary_items": "路径 '{path}': 共遇到 {count} 个项目。已处理 {video_count} 个视频文件。",
@@ -386,10 +387,10 @@ translations = {
         "warning_delete_failures_more": "  ... 以及另外 {count} 个。",
         "status_delete_no_files": "没有提供用于删除的文件。",
         "warning_tie_break": "{prefix} {reason}。保留了 '{filename}' ({detail})",
-        "warning_rule_no_date": "警告：{set_id} - 无法应用 '{rule}'：无有效日期。保留最短路径。",
-        "warning_rule_no_suffix_match": "警告：{set_id} - 没有文件匹配后缀 '{suffix}'。保留最短路径。",
-        "warning_rule_failed_selection": "内部警告：{set_id} - 规则 '{rule}' 未能选择要保留的文件。跳过此集合的删除。",
-        "error_rule_application": "将规则 '{rule}' 应用于 {set_id} 时出错：{error}。跳过此集合的删除。",
+        "warning_rule_no_date": "警告：{set_id} - 无法应用建议 '{rule}'：无有效日期。将默认为最短路径。",
+        "warning_rule_no_suffix_match": "警告：{set_id} - 没有文件匹配后缀 '{suffix}'。将默认为最短路径。",
+        "warning_rule_failed_selection": "内部警告：{set_id} - 规则 '{rule}' 未能选择要保留的文件。跳过此集合的建议。",
+        "error_rule_application": "将建议规则 '{rule}' 应用于 {set_id} 时出错：{error}。跳过此集合的建议。",
         "log_debug_calc_path": "[调试] 根据 Scan='{scan_raw}', Mount='{mount_raw}' 计算出的有效云扫描路径: '{fs_path}'",
         "log_debug_process_video": "[调试] 正在处理视频文件: {path}",
         "log_debug_attrs_received": "[调试] 收到 {filename} 的属性: {attrs}",
@@ -401,10 +402,11 @@ translations = {
         "log_debug_skipping_no_sha1": "[调试] 因 SHA1 缺失或无效，正在跳过文件 {filename}。",
         "log_debug_storing_info": "[调试] 正在存储文件 {filename} 的信息，SHA1 为: {sha1}",
         "log_debug_merging_results": "[调试] 正在合并路径 '{path}' 的结果。当前总集合数: {count}。",
-        # --- Added for path selection ---
         "select_scan_path_dialog_title": "选择要扫描的根目录",
-        "error_no_scan_paths_added": "错误：尚未添加扫描路径。请至少添加一个路径。", # 新增
-        "scan_path_already_exists": "路径 '{path}' 已存在于列表中。", # 新增
+        "error_no_scan_paths_added": "错误：尚未添加扫描路径。请至少添加一个路径。",
+        "scan_path_already_exists": "路径 '{path}' 已存在于列表中。",
+        # <<< MODIFICATION: Added new translation >>>
+        "info_last_keep_in_set": "提示：无法将 '{filename}' 标记为删除，因为它是集合 {set_id} 中唯一标记为“保留”的文件。",
     }
 }
 
@@ -538,9 +540,7 @@ class DuplicateFileFinder:
         self.clouddrvie2_address = ""
         self.clouddrive2_account = ""
         self.clouddrive2_passwd = ""
-        # <<< MODIFICATION: Store list of raw scan paths >>>
         self._raw_scan_paths = []
-        # <<< END MODIFICATION >>>
         self._raw_mount_point = ""
         self.fs = None
         self.progress_callback = None
@@ -565,7 +565,6 @@ class DuplicateFileFinder:
             # Fallback to console if no callback registered
             print(str(message))
 
-    # <<< MODIFICATION: Accepts a list of raw_scan_paths >>>
     def set_config(
             self,
             clouddrvie2_address,
@@ -575,14 +574,11 @@ class DuplicateFileFinder:
             raw_mount_point,
             progress_callback=None,
     ):
-    # <<< END MODIFICATION >>>
         """ Sets configuration and attempts to establish+test connection. """
         self.clouddrvie2_address = clouddrvie2_address
         self.clouddrive2_account = clouddrive2_account
         self.clouddrive2_passwd = clouddrive2_passwd
-        # <<< MODIFICATION: Store list of raw paths >>>
         self._raw_scan_paths = list(raw_scan_paths) if raw_scan_paths else [] # Store a copy
-        # <<< END MODIFICATION >>>
         self._raw_mount_point = raw_mount_point
         self.progress_callback = progress_callback
         self.fs = None # Reset filesystem object on new config/connection attempt
@@ -745,7 +741,6 @@ class DuplicateFileFinder:
                         default=f"[Debug] Calculated effective cloud scan path: '{fs_dir_path}' from Scan='{scan_path_raw}', Mount='{mount_point_raw}'"))
         return fs_dir_path
 
-    # <<< MODIFICATION: find_duplicates now iterates over multiple paths >>>
     def find_duplicates(self):
         """
         Scans the configured cloud paths for duplicate video files using SHA1 hash.
@@ -867,6 +862,7 @@ class DuplicateFileFinder:
                                     'modified': mod_time_dt,
                                     'size': file_size,
                                     'sha1': file_sha1_standardized
+                                    # <<< MODIFICATION: Store set ID later when populating tree >>>
                                 }
                                 # <<< MERGE into the main dictionary >>>
                                 all_potential_duplicates[file_sha1_standardized].append(file_info)
@@ -900,9 +896,6 @@ class DuplicateFileFinder:
                 if path_warning_parts:
                     self.log(self._("status_scan_warnings", path=fs_dir_path, details='; '.join(path_warning_parts), default=f"Path '{fs_dir_path}': WARNING: {'; '.join(path_warning_parts)}."))
 
-                # Optional Debug log for merging
-                # self.log(self._("log_debug_merging_results", path=fs_dir_path, count=len(all_potential_duplicates), default=f"[Debug] Merging results from path '{fs_dir_path}'. Current total sets: {len(all_potential_duplicates)}."))
-
             except Exception as walk_e:
                 # Catch errors during the fs.walk_path() iteration itself for this path
                 err_msg = self._("error_scan_path", path=fs_dir_path, error=walk_e, default=f"Critical error walking cloud path '{fs_dir_path}': {walk_e}")
@@ -935,9 +928,6 @@ class DuplicateFileFinder:
              self.log(no_dups_msg)
 
         return actual_duplicates
-
-    # <<< END OF MODIFIED find_duplicates METHOD >>>
-
 
     def write_duplicates_report(self, duplicate_sets, output_file):
         """ Writes the dictionary of found duplicate file sets to a text file. """
@@ -1058,7 +1048,8 @@ class DuplicateFinderApp:
         # Application state
         self.duplicate_sets = {} # Stores {sha1: [FileInfo, ...]}
         self.treeview_item_map = {} # Maps tree item ID (file path) -> FileInfo dict
-        self.files_to_delete_cache = [] # Stores paths marked for deletion by rule
+        # <<< MODIFICATION: Removed file cache. Treeview is the source of truth >>>
+        # self.files_to_delete_cache = []
 
         # Tkinter variables
         self.widgets = {} # Holds widget references
@@ -1148,7 +1139,7 @@ class DuplicateFinderApp:
             entry.grid(row=row, column=1, columnspan=2, padx=(2, 5), pady=3, sticky=tk.EW)
             self.entries[key] = entry
 
-        # <<< MODIFICATION: Scan Paths Listbox and Buttons >>>
+        # Scan Paths Listbox and Buttons
         scan_path_row = 3
         # Label for scan paths
         scan_path_label = ttk.Label(config_frame, text=self._("scan_paths_label"))
@@ -1185,7 +1176,6 @@ class DuplicateFinderApp:
         remove_path_button = ttk.Button(scan_path_buttons_frame, text=self._("remove_path_button"), command=self.remove_selected_scan_paths)
         remove_path_button.pack(side=tk.TOP, fill=tk.X)
         self.widgets["remove_scan_path_button"] = remove_path_button
-        # <<< END MODIFICATION >>>
 
         # --- 2. Action Buttons Frame (Load, Save, Test, Find) ---
         action_button_frame = ttk.Frame(master, padding=(5, 0))
@@ -1248,8 +1238,11 @@ class DuplicateFinderApp:
         self.widgets["tree_frame"] = tree_frame
 
         self.columns = ("action", "path", "modified", "size_mb", "set_id")
-        self.tree = ttk.Treeview(tree_frame, columns=self.columns, show="headings", selectmode="none")
+        # <<< MODIFICATION: Changed selectmode to browse for single click >>>
+        self.tree = ttk.Treeview(tree_frame, columns=self.columns, show="headings", selectmode="browse")
         self.widgets["treeview"] = self.tree
+        # <<< MODIFICATION: Bind click event handler >>>
+        self.tree.bind("<ButtonRelease-1>", self._on_tree_click)
 
         self.tree.column("action", width=80, anchor=tk.CENTER, stretch=tk.NO)
         self.tree.column("path", width=550, anchor=tk.W, stretch=tk.YES)
@@ -1276,7 +1269,8 @@ class DuplicateFinderApp:
         final_btn_inner_frame.pack(side=tk.LEFT) # Keep buttons left-aligned
 
         final_buttons_info = [
-             ("delete", "delete_by_rule_button", self.start_delete_by_rule_thread, tk.DISABLED, "Danger.TButton"),
+             # <<< MODIFICATION: Renamed key and translation key, changed command >>>
+             ("delete", "delete_selected_button", self.start_delete_selected_thread, tk.DISABLED, "Danger.TButton"),
              ("chart", "show_chart_button", self.show_cloud_file_types, tk.DISABLED, ""),
              ("save_list", "save_list_button", self.save_duplicates_report, tk.DISABLED, ""),
         ]
@@ -1417,9 +1411,7 @@ class DuplicateFinderApp:
             label_keys = {
                 "label_address": "address_label", "label_account": "account_label",
                 "label_password": "password_label",
-                # <<< MODIFICATION: Use new label key >>>
                 "label_scan_paths": "scan_paths_label",
-                # <<< END MODIFICATION >>>
                 "label_mount_point": "mount_point_label",
                 "suffix_label": "rule_suffix_entry_label"
             }
@@ -1434,12 +1426,11 @@ class DuplicateFinderApp:
                 "load_button": "load_config_button", "save_button": "save_config_button",
                 "test_conn_button": "test_connection_button",
                 "find_button": "find_button",
-                "delete_button": "delete_by_rule_button",
+                # <<< MODIFICATION: Use new button key >>>
+                "delete_button": "delete_selected_button",
                 "save_list_button": "save_list_button",
-                # <<< MODIFICATION: Add new button keys >>>
                 "add_scan_path_button": "add_path_button",
                 "remove_scan_path_button": "remove_path_button",
-                # <<< END MODIFICATION >>>
             }
             for widget_key, text_key in button_keys.items():
                 widget = self.widgets.get(widget_key)
@@ -1470,10 +1461,12 @@ class DuplicateFinderApp:
             # Treeview Headings
             self.setup_treeview_headings()
 
-            # Re-apply rule highlighting if data exists
+            # Re-apply rule highlighting if data exists and a rule was selected
+            # (Now also handles manual selections persisting)
             tree = self.widgets.get("treeview")
-            if self.duplicate_sets and self.deletion_rule_var.get() and tree and tree.winfo_exists():
-                self._apply_rule_to_treeview(log_update=False)
+            if self.duplicate_sets and tree and tree.winfo_exists() and tree.get_children():
+                # Need to re-apply tags based on current Action column values
+                self._update_treeview_tags_from_action()
 
             print(f"UI Language update to {self.current_language} complete.")
 
@@ -1554,7 +1547,11 @@ class DuplicateFinderApp:
                     elif col == 'modified':
                         sort_value = get_sortable_datetime(file_info.get('modified'))
                     elif col == 'size_mb':
-                        sort_value = file_info.get('size', 0) if file_info.get('size') is not None else 0
+                        size_str = tree.set(item_id, col)
+                        try:
+                            sort_value = float(size_str)
+                        except ValueError:
+                            sort_value = 0.0
                     elif col == 'set_id':
                         current_val_str = tree.set(item_id, col)
                         match = re.search(r'\d+', current_val_str)
@@ -1569,6 +1566,7 @@ class DuplicateFinderApp:
                     default_sort_val = 0
                     if col == 'modified': default_sort_val = min_datetime_sort if self._sort_ascending else max_datetime_sort
                     elif col in ['path', 'action']: default_sort_val = "" if self._sort_ascending else "~"
+                    elif col == 'size_mb': default_sort_val = 0.0
                     items_to_sort.append((default_sort_val, item_id))
 
         # Perform the Sort
@@ -1640,9 +1638,7 @@ class DuplicateFinderApp:
         self.log_message(self._("status_loading_config", file=os.path.basename(config_path), default=f"Loading config from {os.path.basename(config_path)}..."))
         config = configparser.ConfigParser()
 
-        # <<< MODIFICATION: Set default API address BEFORE reading config >>>
         self.string_vars["address"].set(DEFAULT_API_ADDRESS)
-        # <<< END MODIFICATION >>>
 
         # Clear other fields and listbox before loading
         for key in ["account", "password", "mount_point"]:
@@ -1670,13 +1666,12 @@ class DuplicateFinderApp:
                 self.string_vars["password"].set(cfg_section.get("clouddrive2_passwd", ""))
                 self.string_vars["mount_point"].set(cfg_section.get("clouddrive2_root_path", ""))
 
-                # <<< MODIFICATION: Load scan paths from potentially multi-line string >>>
+                # Load scan paths from potentially multi-line string
                 root_path_str = cfg_section.get("root_path", "")
                 if root_path_str and scan_listbox and scan_listbox.winfo_exists():
                     paths = [p.strip() for p in root_path_str.split('\n') if p.strip()]
                     for path in paths:
                         scan_listbox.insert(tk.END, path)
-                # <<< END MODIFICATION >>>
 
                 self.log_message(self._("status_config_loaded", default="Config loaded successfully."))
             else:
@@ -1699,22 +1694,19 @@ class DuplicateFinderApp:
         self.log_message(self._("status_saving_config", file=os.path.basename(config_path), default=f"Saving config to {os.path.basename(config_path)}..."))
         config = configparser.ConfigParser()
 
-        # <<< MODIFICATION: Get scan paths from Listbox >>>
+        # Get scan paths from Listbox
         scan_paths = []
         scan_listbox = self.widgets.get("scan_path_listbox")
         if scan_listbox and scan_listbox.winfo_exists():
             scan_paths = list(scan_listbox.get(0, tk.END))
         # Join paths with newline for storage in INI
         root_path_value = "\n".join(p.strip() for p in scan_paths if p.strip())
-        # <<< END MODIFICATION >>>
 
         config_data = {
             "clouddrvie2_address": self.string_vars["address"].get(),
             "clouddrive2_account": self.string_vars["account"].get(),
             "clouddrive2_passwd": self.string_vars["password"].get(),
-            # <<< MODIFICATION: Save joined scan paths >>>
             "root_path": root_path_value,
-            # <<< END MODIFICATION >>>
             "clouddrive2_root_path": self.string_vars["mount_point"].get(),
         }
         config['config'] = config_data
@@ -1749,7 +1741,6 @@ class DuplicateFinderApp:
              self.log_message(error_msg)
              self.log_message(traceback.format_exc())
 
-    # <<< NEW METHOD: Add scan path to listbox >>>
     def add_scan_path(self):
         """Opens a directory selection dialog and adds the selected path to the listbox."""
         dialog_title = self._("select_scan_path_dialog_title", default="Select Root Scan Directory")
@@ -1770,9 +1761,7 @@ class DuplicateFinderApp:
                     scan_listbox.insert(tk.END, selected_directory)
                     self.log_message(f"Added scan path: {selected_directory}")
                     scan_listbox.see(tk.END) # Scroll to the newly added item
-    # <<< END NEW METHOD >>>
 
-    # <<< NEW METHOD: Remove selected scan paths from listbox >>>
     def remove_selected_scan_paths(self):
         """Removes the selected path(s) from the scan path listbox."""
         scan_listbox = self.widgets.get("scan_path_listbox")
@@ -1787,9 +1776,7 @@ class DuplicateFinderApp:
                 removed_path = scan_listbox.get(i)
                 scan_listbox.delete(i)
                 self.log_message(f"Removed scan path: {removed_path}")
-    # <<< END NEW METHOD >>>
 
-    # <<< MODIFICATION: Check paths from listbox >>>
     def _check_path_chars(self, path_dict, check_scan_paths_from_listbox=False):
         """
         Validates characters in specified path inputs using _validate_path_chars helper.
@@ -1848,7 +1835,6 @@ class DuplicateFinderApp:
             return False # Indicate failure
 
         return True # All paths checked were valid
-    # <<< END MODIFICATION >>>
 
 
     def set_ui_state(self, mode):
@@ -1859,24 +1845,33 @@ class DuplicateFinderApp:
         is_idle_state = mode in ['initial', 'normal']
         is_connected = mode != 'initial' and self.finder is not None and self.finder.fs is not None
         has_duplicates = is_connected and bool(self.duplicate_sets)
-        is_rule_selected = is_connected and bool(self.deletion_rule_var.get())
-        has_files_marked_for_deletion = is_connected and bool(self.files_to_delete_cache)
+        # <<< MODIFICATION: Check treeview directly for delete state >>>
+        has_files_marked_for_deletion = False
+        tree = self.widgets.get("treeview")
+        if is_connected and has_duplicates and tree and tree.winfo_exists():
+             delete_text = self._("tree_action_delete", default="Delete")
+             for item_id in tree.get_children(''):
+                 try:
+                     if tree.exists(item_id) and tree.set(item_id, "action") == delete_text:
+                         has_files_marked_for_deletion = True
+                         break
+                 except tk.TclError: pass # Ignore if item vanishes
 
         # Calculate widget states
         config_entry_state = tk.NORMAL if is_idle_state else tk.DISABLED
         config_button_state = tk.NORMAL if is_idle_state else tk.DISABLED
         find_button_state = tk.NORMAL if is_idle_state and is_connected else tk.DISABLED
+        # <<< MODIFICATION: Rules are enabled once duplicates found >>>
         rules_radio_state = tk.NORMAL if is_idle_state and is_connected and has_duplicates else tk.DISABLED
-        # <<< MODIFICATION: Control scan path Listbox and buttons state >>>
         scan_path_listbox_state = tk.NORMAL if is_idle_state else tk.DISABLED
         scan_path_button_state = tk.NORMAL if is_idle_state else tk.DISABLED
-        # <<< END MODIFICATION >>>
 
         suffix_widgets_state = tk.DISABLED
-        if is_idle_state and is_connected and has_duplicates and self.deletion_rule_var.get() == RULE_KEEP_SUFFIX:
+        if rules_radio_state == tk.NORMAL and self.deletion_rule_var.get() == RULE_KEEP_SUFFIX:
             suffix_widgets_state = tk.NORMAL
 
-        delete_button_state = tk.NORMAL if is_idle_state and is_connected and has_duplicates and is_rule_selected and has_files_marked_for_deletion else tk.DISABLED
+        # <<< MODIFICATION: Delete button depends on files marked in tree >>>
+        delete_button_state = tk.NORMAL if is_idle_state and is_connected and has_duplicates and has_files_marked_for_deletion else tk.DISABLED
         save_report_button_state = tk.NORMAL if is_idle_state and is_connected and has_duplicates else tk.DISABLED
         chart_button_state = tk.NORMAL if is_idle_state and is_connected and MATPLOTLIB_AVAILABLE else tk.DISABLED
 
@@ -1892,7 +1887,7 @@ class DuplicateFinderApp:
                  try: widget.config(state=config_button_state)
                  except tk.TclError: pass
 
-        # <<< MODIFICATION: Set state for scan path Listbox and buttons >>>
+        # Set state for scan path Listbox and buttons
         widget = self.widgets.get("scan_path_listbox")
         if widget and widget.winfo_exists():
             try: widget.config(state=scan_path_listbox_state)
@@ -1905,7 +1900,6 @@ class DuplicateFinderApp:
         if widget and widget.winfo_exists():
             try: widget.config(state=scan_path_button_state)
             except tk.TclError: pass
-        # <<< END MODIFICATION >>>
 
         widget = self.widgets.get("find_button")
         if widget and widget.winfo_exists():
@@ -1946,10 +1940,8 @@ class DuplicateFinderApp:
         address = self.string_vars["address"].get()
         account = self.string_vars["account"].get()
         mount_point = self.string_vars["mount_point"].get()
-        # <<< MODIFICATION: Get scan paths (needed for set_config signature) >>>
         scan_listbox = self.widgets.get("scan_path_listbox")
         scan_paths = list(scan_listbox.get(0, tk.END)) if scan_listbox else []
-        # <<< END MODIFICATION >>>
 
         if not all([address, account, mount_point]):
              error_msg = self._("error_input_missing_conn", default="API Address, Account, and Mount Point are required for connection test.")
@@ -1957,7 +1949,7 @@ class DuplicateFinderApp:
              if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"), error_msg, master=self.master)
              return
 
-        # <<< MODIFICATION: Check mount point, but not scan paths for connection test char validation >>>
+        # Check mount point, but not scan paths for connection test char validation
         paths_to_check_conn = {
             "address": address,         # Implicitly checked by connection attempt
             "mount_point": mount_point,
@@ -1965,26 +1957,19 @@ class DuplicateFinderApp:
         }
         if not self._check_path_chars(paths_to_check_conn, check_scan_paths_from_listbox=False):
             return
-        # <<< END MODIFICATION >>>
 
         self.log_message(self._("status_connecting", default="Attempting connection test..."))
         self.set_ui_state("testing_connection")
-        # <<< MODIFICATION: Pass scan_paths list to worker >>>
         thread = threading.Thread(target=self._test_connection_worker,
                                   args=(address, account, self.string_vars["password"].get(), scan_paths, mount_point),
                                   daemon=True)
-        # <<< END MODIFICATION >>>
         thread.start()
 
-    # <<< MODIFICATION: Accepts list of scan_paths >>>
     def _test_connection_worker(self, address, account, passwd, scan_paths, mount_point):
-    # <<< END MODIFICATION >>>
         """ Worker thread for testing the CloudDrive2 connection. """
         connected = False
         try:
-            # <<< MODIFICATION: Pass scan_paths list to set_config >>>
             connected = self.finder.set_config(address, account, passwd, scan_paths, mount_point, self.log_message)
-            # <<< END MODIFICATION >>>
 
             if self.master.winfo_exists():
                  if connected:
@@ -2016,7 +2001,6 @@ class DuplicateFinderApp:
              self.log_message(self._("error_not_connected", default="Error: Not connected. Cannot start scan."))
              return
 
-        # <<< MODIFICATION: Get paths from listbox and validate required fields >>>
         scan_listbox = self.widgets.get("scan_path_listbox")
         scan_paths_val = list(scan_listbox.get(0, tk.END)) if scan_listbox else []
         mount_point_val = self.string_vars["mount_point"].get()
@@ -2040,7 +2024,6 @@ class DuplicateFinderApp:
         paths_to_check = {"mount_point": mount_point_val}
         if not self._check_path_chars(paths_to_check, check_scan_paths_from_listbox=True):
             return
-        # <<< END MODIFICATION >>>
 
         self.clear_results()
         self.log_message(self._("find_starting", num_paths=len(scan_paths_val), default=f"Starting duplicate scan ({len(scan_paths_val)} paths)...")) # Log included in worker now
@@ -2083,8 +2066,9 @@ class DuplicateFinderApp:
 
         if self.duplicate_sets:
             self.populate_treeview()
-            if self.deletion_rule_var.get():
-                self._apply_rule_to_treeview()
+            # <<< MODIFICATION: Don't automatically apply rule. User must click radio or manually select. >>>
+            # if self.deletion_rule_var.get():
+            #    self._apply_rule_to_treeview()
         else:
             tree = self.widgets.get("treeview")
             if tree and tree.winfo_exists():
@@ -2098,12 +2082,13 @@ class DuplicateFinderApp:
 
 
     def clear_results(self):
-        """Clears the treeview, stored duplicate data, rule selection, and delete cache."""
+        """Clears the treeview, stored duplicate data, rule selection, and resets sort."""
         self.log_message(self._("status_clearing_tree", default="Clearing results list and rule selection..."))
 
         self.duplicate_sets = {}
         self.treeview_item_map = {}
-        self.files_to_delete_cache = []
+        # <<< MODIFICATION: No cache to clear >>>
+        # self.files_to_delete_cache = []
         self.deletion_rule_var.set("")
         self.suffix_entry_var.set("")
         self._last_sort_col = None
@@ -2116,11 +2101,12 @@ class DuplicateFinderApp:
                 self.setup_treeview_headings() # Reset headers
             except tk.TclError: pass
 
+        # <<< MODIFICATION: Set state *after* clearing rule var >>>
         self.set_ui_state('normal')
 
 
     def populate_treeview(self):
-        """ Populates the treeview with found duplicate sets. """
+        """ Populates the treeview with found duplicate sets, leaving 'Action' blank initially. """
         tree = self.widgets.get("treeview")
         if not tree or not tree.winfo_exists():
             self.log_message("Error: Treeview widget not available. Cannot display results.")
@@ -2172,10 +2158,13 @@ class DuplicateFinderApp:
                     size_mb = size / (1024 * 1024) if isinstance(size, (int, float)) and size > 0 else 0.0
                     set_id_str = self._("tree_set_col_value", index=set_index, default=f"{set_index}")
 
+                    # <<< MODIFICATION: Initial Action is empty, no initial tag >>>
                     values = ("", path, mod_time_str, f"{size_mb:.2f}", set_id_str)
-                    item_id = path
+                    item_id = path # Use path as the unique item ID
 
                     if not tree.exists(item_id):
+                         # Store the Set ID within the file_info for easier lookup later
+                         file_info['_set_id_display'] = set_id_str
                          tree.insert("", tk.END, iid=item_id, values=values, tags=())
                          self.treeview_item_map[item_id] = file_info
                          items_inserted += 1
@@ -2184,11 +2173,16 @@ class DuplicateFinderApp:
                          items_failed += 1
 
                 except tk.TclError as e:
-                     self.log_message(f"Error inserting item with path '{path}' into tree: {e}")
+                     # Check if item_id was assigned before error
+                     item_id_str = item_id if 'item_id' in locals() and item_id else path if path else 'Unknown'
+                     self.log_message(f"Error inserting item with path '{item_id_str}' into tree: {e}")
                      items_failed += 1
-                     if item_id in self.treeview_item_map: del self.treeview_item_map[item_id]
+                     if 'item_id' in locals() and item_id in self.treeview_item_map:
+                         try: del self.treeview_item_map[item_id]
+                         except KeyError: pass
                 except Exception as e:
-                     self.log_message(f"Unexpected error processing file '{file_info.get('path', 'Unknown')}' for treeview: {e}")
+                     path_str = file_info.get('path', 'Unknown')
+                     self.log_message(f"Unexpected error processing file '{path_str}' for treeview: {e}")
                      self.log_message(traceback.format_exc(limit=2))
                      items_failed += 1
 
@@ -2206,9 +2200,10 @@ class DuplicateFinderApp:
 
 
     def _on_rule_change(self):
-        """Called when a deletion rule radio button is selected."""
+        """Called when a deletion rule radio button is selected. Applies the rule as a suggestion."""
         selected_rule = self.deletion_rule_var.get()
 
+        # Update suffix entry state
         is_suffix_rule = (selected_rule == RULE_KEEP_SUFFIX)
         can_enable_suffix = (is_suffix_rule and
                              self.finder is not None and self.finder.fs is not None and
@@ -2227,39 +2222,37 @@ class DuplicateFinderApp:
         if not is_suffix_rule:
             self.suffix_entry_var.set("")
 
+        # Apply the selected rule to the treeview as a suggestion
         self._apply_rule_to_treeview()
 
 
     def _apply_rule_to_treeview(self, log_update=True):
         """
         Updates the 'Action' column and highlighting in the treeview based on the
-        selected deletion rule. Updates the `files_to_delete_cache`.
+        selected deletion rule suggestion.
         """
         tree = self.widgets.get("treeview")
         if not self.duplicate_sets or not tree or not tree.winfo_exists():
-            self.files_to_delete_cache = []
+            # <<< MODIFICATION: No cache to clear >>>
+            # self.files_to_delete_cache = []
             self.set_ui_state('normal')
             return
 
         selected_rule = self.deletion_rule_var.get()
 
+        # If no rule is selected (e.g., after clearing), do nothing to the tree
         if not selected_rule:
-            self.files_to_delete_cache = []
-            try:
-                if tree.winfo_exists():
-                    for item_id in self.treeview_item_map.keys():
-                        if tree.exists(item_id):
-                            tree.set(item_id, "action", "")
-                            tree.item(item_id, tags=())
-            except tk.TclError: pass
-            self.set_ui_state('normal')
+            # Don't clear the tree view actions here, only clear them in clear_results()
+            # self.files_to_delete_cache = []
+            # ... clear tree code removed ...
+            self.set_ui_state('normal') # Just update button states
             return
 
         rule_name_display_key = f"rule_{selected_rule}"
         rule_name_display = self._(rule_name_display_key, default=selected_rule.replace('_', ' ').title())
 
         if log_update:
-            self.log_message(self._("status_applying_rule", rule_name=rule_name_display, count=len(self.duplicate_sets), default=f"Applying rule '{rule_name_display}'..."))
+            self.log_message(self._("status_applying_rule", rule_name=rule_name_display, count=len(self.duplicate_sets), default=f"Applying suggestion rule '{rule_name_display}'..."))
         start_time = time.time()
 
         keep_text = self._("tree_action_keep", default="Keep")
@@ -2267,10 +2260,11 @@ class DuplicateFinderApp:
         suffix_to_keep = self.suffix_entry_var.get() if selected_rule == RULE_KEEP_SUFFIX else None
         delete_count = 0
         application_error = False
+        files_to_delete_list = [] # Store paths suggested for deletion by the rule
 
         try:
+            # Determine the *suggestions* based on the rule
             files_to_delete_list = self._determine_files_to_delete(self.duplicate_sets, selected_rule, suffix_to_keep)
-            self.files_to_delete_cache = files_to_delete_list
             files_to_delete_paths_set = set(files_to_delete_list)
             delete_count = len(files_to_delete_paths_set)
 
@@ -2278,6 +2272,8 @@ class DuplicateFinderApp:
             if not tree.winfo_exists():
                 raise tk.TclError("Treeview destroyed during rule application")
 
+            # Iterate through all items in the treeview and update Action/Tags
+            # Using list() to avoid issues if map changes during iteration (shouldn't here)
             for item_id in list(self.treeview_item_map.keys()):
                  if tree.exists(item_id) and item_id in self.treeview_item_map:
                      file_info = self.treeview_item_map[item_id]
@@ -2287,53 +2283,176 @@ class DuplicateFinderApp:
                      is_marked_for_delete = (path in files_to_delete_paths_set)
                      action_text = delete_text if is_marked_for_delete else keep_text
                      item_tags = ('delete',) if is_marked_for_delete else ('keep',)
+
                      tree.set(item_id, "action", action_text)
                      tree.item(item_id, tags=item_tags)
+                 # else: Item might have been removed already, ignore.
 
             tree_update_end = time.time()
             if log_update:
-                self.log_message(self._("status_rule_applied", delete_count=delete_count, default=f"Rule applied. {delete_count} files marked for deletion."))
+                self.log_message(self._("status_rule_applied", delete_count=delete_count, default=f"Rule suggestion applied. {delete_count} files initially marked for deletion. Click 'Action' column to change."))
 
-        except ValueError as ve:
-             self.log_message(f"Rule Application Error: {ve}")
+        except ValueError as ve: # Catch specific error from _determine_files_to_delete
+             self.log_message(f"Rule Suggestion Error: {ve}")
              if self.master.winfo_exists(): messagebox.showerror(self._("error_rule_title", default="Rule Error"), str(ve), master=self.master)
              application_error = True
-             self.files_to_delete_cache = []
-             try:
-                 if tree.winfo_exists():
-                     for item_id in self.treeview_item_map.keys():
-                         if tree.exists(item_id):
-                             tree.set(item_id, "action", "")
-                             tree.item(item_id, tags=())
-             except tk.TclError: pass
              delete_count = 0
+             # Don't clear the tree here, just log the error
         except tk.TclError as e:
              self.log_message(f"Error updating treeview during rule application: {e}")
-             self.files_to_delete_cache = []
              application_error = True
              delete_count = 0
         except Exception as e:
-             self.log_message(f"Unexpected error applying rule '{selected_rule}' to treeview: {e}")
+             self.log_message(f"Unexpected error applying rule suggestion '{selected_rule}' to treeview: {e}")
              self.log_message(traceback.format_exc())
-             self.files_to_delete_cache = []
              application_error = True
              delete_count = 0
         finally:
+            # <<< MODIFICATION: No cache to update >>>
+            # self.files_to_delete_cache = files_to_delete_list if not application_error else []
             if selected_rule and log_update:
                 end_time = time.time()
+            # Update UI state which might enable/disable delete button based on tree content
             self.set_ui_state('normal')
+
+    def _get_set_id_for_item(self, item_id):
+        """ Helper to safely get the set ID string from a treeview item. """
+        tree = self.widgets.get("treeview")
+        if tree and tree.winfo_exists() and tree.exists(item_id):
+            try:
+                return tree.set(item_id, "set_id")
+            except tk.TclError:
+                return None
+        return None
+
+    def _update_treeview_tags_from_action(self):
+        """ Updates treeview item tags based on the current value in the 'Action' column. """
+        tree = self.widgets.get("treeview")
+        if not tree or not tree.winfo_exists():
+            return
+
+        keep_text = self._("tree_action_keep", default="Keep")
+        delete_text = self._("tree_action_delete", default="Delete")
+
+        try:
+            for item_id in tree.get_children(''):
+                if not tree.exists(item_id): continue
+                action_text = tree.set(item_id, "action")
+                if action_text == keep_text:
+                    tree.item(item_id, tags=('keep',))
+                elif action_text == delete_text:
+                    tree.item(item_id, tags=('delete',))
+                else:
+                    tree.item(item_id, tags=())
+        except tk.TclError as e:
+            self.log_message(f"Error updating tree tags: {e}")
+        except Exception as e:
+            self.log_message(f"Unexpected error updating tree tags: {e}")
+
+
+    def _on_tree_click(self, event):
+        """ Handles clicks on the treeview, specifically toggling Keep/Delete in the Action column. """
+        tree = self.widgets.get("treeview")
+        if not tree or not tree.winfo_exists(): return
+
+        region = tree.identify_region(event.x, event.y)
+        if region != "cell":
+            return # Click wasn't on a cell
+
+        col_id = tree.identify_column(event.x)
+        item_id = tree.identify_row(event.y) # item_id is the file path
+
+        # We only care about clicks on the 'action' column (#1)
+        if col_id != "#1" or not item_id:
+            return
+
+        try:
+            if not tree.exists(item_id): return # Item might have been deleted
+
+            current_action = tree.set(item_id, "action")
+            keep_text = self._("tree_action_keep", default="Keep")
+            delete_text = self._("tree_action_delete", default="Delete")
+            clicked_set_id_str = self._get_set_id_for_item(item_id)
+
+            if not clicked_set_id_str:
+                 self.log_message(f"Warning: Could not determine Set ID for clicked item '{item_id}'. Cannot toggle action.")
+                 return
+
+            # --- Find siblings in the same set ---
+            siblings = []
+            current_keep_item = None
+            keep_count_in_set = 0
+            for sibling_id in tree.get_children(''):
+                 if tree.exists(sibling_id):
+                     set_id_val = self._get_set_id_for_item(sibling_id)
+                     if set_id_val == clicked_set_id_str:
+                         siblings.append(sibling_id)
+                         action = tree.set(sibling_id, "action")
+                         if action == keep_text:
+                             keep_count_in_set += 1
+                             if sibling_id != item_id: # Don't count self if it's currently Keep
+                                 current_keep_item = sibling_id
+
+            # --- Logic: Toggle Keep/Delete, ensuring one Keep per set ---
+            new_action = ""
+            new_tag = ()
+
+            if current_action == keep_text:
+                # Trying to change Keep -> Delete
+                if keep_count_in_set <= 1:
+                    # Prevent deleting the last 'Keep' item in the set
+                    filename = os.path.basename(item_id)
+                    set_num_match = re.search(r'\d+', clicked_set_id_str)
+                    set_num = set_num_match.group(0) if set_num_match else clicked_set_id_str
+                    log_msg = self._("info_last_keep_in_set", filename=filename, set_id=set_num, default=f"Info: Cannot mark '{filename}' for deletion as it's the only file marked 'Keep' in Set {set_num}.")
+                    self.log_message(log_msg)
+                    return # Do nothing
+                else:
+                    # Allow change: Keep -> Delete
+                    new_action = delete_text
+                    new_tag = ('delete',)
+            elif current_action == delete_text:
+                # Trying to change Delete -> Keep
+                new_action = keep_text
+                new_tag = ('keep',)
+                # Also change the *other* Keep item in this set to Delete
+                if current_keep_item and tree.exists(current_keep_item):
+                    tree.set(current_keep_item, "action", delete_text)
+                    tree.item(current_keep_item, tags=('delete',))
+            else: # If current action is blank or something else, treat as changing to Keep
+                new_action = keep_text
+                new_tag = ('keep',)
+                # Also change the *other* Keep item in this set to Delete (if one exists)
+                if current_keep_item and tree.exists(current_keep_item):
+                    tree.set(current_keep_item, "action", delete_text)
+                    tree.item(current_keep_item, tags=('delete',))
+
+
+            # Apply the change to the clicked item
+            if new_action:
+                tree.set(item_id, "action", new_action)
+                tree.item(item_id, tags=new_tag)
+
+            # Update the UI state (e.g., enable/disable Delete button)
+            self.set_ui_state('normal')
+
+        except tk.TclError as e:
+            self.log_message(f"Error handling tree click for item '{item_id}': {e}")
+        except Exception as e:
+            self.log_message(f"Unexpected error handling tree click: {e}")
+            self.log_message(traceback.format_exc(limit=2))
 
 
     def _determine_files_to_delete(self, duplicate_sets, rule, suffix_value):
         """
-        Determines which files to delete based on the selected rule and duplicate sets.
+        Determines which files to delete based on the selected rule *suggestion* and duplicate sets.
         Handles tie-breaking using shortest path as default. Logs warnings via self.log_message.
-        Returns: list: A list of full file paths (str) to be deleted.
+        Returns: list: A list of full file paths (str) suggested for deletion.
         Raises: ValueError: If rule is invalid or suffix is missing when required.
         """
         if not isinstance(duplicate_sets, dict) or not duplicate_sets: return []
         if not rule: raise ValueError(self._("delete_no_rule_selected", default="No deletion rule selected."))
-        if rule == RULE_KEEP_SUFFIX and not suffix_value: raise ValueError(self._("delete_suffix_missing", default="Suffix is required for the 'Keep Suffix' rule."))
+        if rule == RULE_KEEP_SUFFIX and not suffix_value: raise ValueError(self._("delete_suffix_missing", default="Suffix is required for the 'Keep Suffix' rule suggestion."))
         valid_rules = {RULE_KEEP_SHORTEST, RULE_KEEP_LONGEST, RULE_KEEP_OLDEST, RULE_KEEP_NEWEST, RULE_KEEP_SUFFIX}
         if rule not in valid_rules: raise ValueError(f"Internal Error: Unknown deletion rule '{rule}'.")
 
@@ -2344,20 +2463,34 @@ class DuplicateFinderApp:
         def tie_break_shortest_path(candidates, reason_for_tiebreak):
              if not candidates: return None
              if len(candidates) == 1: return candidates[0]
+             # Sort primarily by path length, secondarily by path string itself for stability
              sorted_candidates = sorted(candidates, key=lambda f: (len(f.get('path', '')), f.get('path', '')))
              winner = sorted_candidates[0]
              log_func(self._("warning_tie_break", prefix=tie_break_prefix, reason=reason_for_tiebreak, filename=os.path.basename(winner.get('path','N/A')), detail=f"Shortest path of {len(candidates)}", default=f"{tie_break_prefix} {reason_for_tiebreak}. Kept '{os.path.basename(winner.get('path','N/A'))}' (Shortest path of {len(candidates)})."))
              return winner
 
-        for set_index, (sha1, files_in_set) in enumerate(duplicate_sets.items()):
+        # Determine the display index for each set ID string for logging
+        set_id_map = {}
+        current_index = 0
+        sorted_sha1s_for_index = sorted(duplicate_sets.keys())
+        for sha1 in sorted_sha1s_for_index:
+             if len(duplicate_sets[sha1]) > 1:
+                 current_index += 1
+                 set_id_str = self._("tree_set_col_value", index=current_index, default=f"{current_index}")
+                 set_id_map[sha1] = set_id_str
+
+
+        for sha1, files_in_set in duplicate_sets.items():
             if not isinstance(files_in_set, list) or len(files_in_set) < 2: continue
             keep_file_info = None
-            set_id_for_log = f"Set {set_index+1} (SHA1: {sha1[:8]}...)"
+            # Use the pre-calculated display index for logging consistency
+            set_id_for_log = set_id_map.get(sha1, f"SHA1: {sha1[:8]}...")
 
             try:
                 candidates = []
                 reason_for_tiebreak = ""
 
+                # --- Apply Rule Logic to find candidate(s) to keep ---
                 if rule == RULE_KEEP_SHORTEST:
                     valid_files = [f for f in files_in_set if f.get('path') is not None]
                     if not valid_files: continue
@@ -2373,8 +2506,8 @@ class DuplicateFinderApp:
                 elif rule == RULE_KEEP_OLDEST:
                     valid_files = [f for f in files_in_set if isinstance(f.get('modified'), datetime)]
                     if not valid_files:
-                        log_func(self._("warning_rule_no_date", set_id=set_id_for_log, rule=rule, default=f"Warning: {set_id_for_log} - Cannot apply '{rule}': No valid dates. Keeping shortest path."))
-                        candidates = list(files_in_set)
+                        log_func(self._("warning_rule_no_date", set_id=set_id_for_log, rule=rule, default=f"Warning: {set_id_for_log} - Cannot apply suggestion '{rule}': No valid dates. Defaulting to shortest path."))
+                        candidates = list(files_in_set) # Fallback to all files for tie-break
                         reason_for_tiebreak = "No valid dates found"
                     else:
                         min_date = min(f['modified'] for f in valid_files)
@@ -2383,8 +2516,8 @@ class DuplicateFinderApp:
                 elif rule == RULE_KEEP_NEWEST:
                     valid_files = [f for f in files_in_set if isinstance(f.get('modified'), datetime)]
                     if not valid_files:
-                        log_func(self._("warning_rule_no_date", set_id=set_id_for_log, rule=rule, default=f"Warning: {set_id_for_log} - Cannot apply '{rule}': No valid dates. Keeping shortest path."))
-                        candidates = list(files_in_set)
+                        log_func(self._("warning_rule_no_date", set_id=set_id_for_log, rule=rule, default=f"Warning: {set_id_for_log} - Cannot apply suggestion '{rule}': No valid dates. Defaulting to shortest path."))
+                        candidates = list(files_in_set) # Fallback to all files for tie-break
                         reason_for_tiebreak = "No valid dates found"
                     else:
                         max_date = max(f['modified'] for f in valid_files)
@@ -2394,21 +2527,26 @@ class DuplicateFinderApp:
                     suffix_lower = suffix_value.lower()
                     candidates = [f for f in files_in_set if f.get('path', '').lower().endswith(suffix_lower)]
                     if not candidates:
-                         log_func(self._("warning_rule_no_suffix_match", set_id=set_id_for_log, suffix=suffix_value, default=f"Warning: {set_id_for_log} - No files match suffix '{suffix_value}'. Keeping shortest path."))
-                         candidates = list(files_in_set)
+                         log_func(self._("warning_rule_no_suffix_match", set_id=set_id_for_log, suffix=suffix_value, default=f"Warning: {set_id_for_log} - No files match suffix '{suffix_value}'. Defaulting to shortest path."))
+                         candidates = list(files_in_set) # Fallback to all files for tie-break
                          reason_for_tiebreak = f"No files match suffix '{suffix_value}'"
                     else:
                          reason_for_tiebreak = f"Multiple files match suffix '{suffix_value}'"
 
+                # --- Tie-breaking or selecting the single candidate ---
                 if len(candidates) > 1 or (not candidates and rule in [RULE_KEEP_OLDEST, RULE_KEEP_NEWEST, RULE_KEEP_SUFFIX]):
-                    if not candidates: candidates = list(files_in_set)
+                    # If rule failed to find *any* candidate (e.g., no dates, no suffix match),
+                    # candidates might be empty, so use original files_in_set for tie-break.
+                    effective_candidates = candidates if candidates else list(files_in_set)
+                    if not effective_candidates: continue # Skip if set was somehow empty
                     full_reason = f"{set_id_for_log} - {reason_for_tiebreak}"
-                    keep_file_info = tie_break_shortest_path(candidates, full_reason)
+                    keep_file_info = tie_break_shortest_path(effective_candidates, full_reason)
                 elif len(candidates) == 1:
                      keep_file_info = candidates[0]
-                else:
+                else: # Should only happen if valid_files was empty initially (e.g., no paths)
                      keep_file_info = None
 
+                # --- Add files *not* kept to the delete list ---
                 if keep_file_info and keep_file_info.get('path'):
                     keep_path = keep_file_info['path']
                     for f_info in files_in_set:
@@ -2416,54 +2554,76 @@ class DuplicateFinderApp:
                         if path and path != keep_path:
                             files_to_delete.append(path)
                 else:
-                     log_func(self._("warning_rule_failed_selection", set_id=set_id_for_log, rule=rule, default=f"Internal Warning: {set_id_for_log} - Rule '{rule}' failed to select file to keep. Skipping deletion for this set."))
+                     # This case should be rare now due to fallbacks, but log if it happens
+                     log_func(self._("warning_rule_failed_selection", set_id=set_id_for_log, rule=rule, default=f"Internal Warning: {set_id_for_log} - Rule '{rule}' failed to select file to keep. Skipping suggestion for this set."))
 
             except Exception as e:
-                 log_func(self._("error_rule_application", set_id=set_id_for_log, rule=rule, error=e, default=f"Error applying rule '{rule}' to {set_id_for_log}: {e}. Skipping deletion for this set."))
+                 log_func(self._("error_rule_application", set_id=set_id_for_log, rule=rule, error=e, default=f"Error applying suggestion rule '{rule}' to {set_id_for_log}: {e}. Skipping suggestion for this set."))
                  log_func(traceback.format_exc(limit=2))
 
         return files_to_delete
 
 
-    def start_delete_by_rule_thread(self):
+    # <<< MODIFICATION: Renamed method >>>
+    def start_delete_selected_thread(self):
         """ Handles 'Delete Marked Files' click. Validates, confirms, starts worker thread. """
-        selected_rule = self.deletion_rule_var.get()
+        tree = self.widgets.get("treeview")
+        if not tree or not tree.winfo_exists():
+            self.log_message("Error: Cannot delete, results list is not available.")
+            return
 
-        if not selected_rule:
-             if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"), self._("delete_no_rule_selected", default="Please select a rule."), master=self.master)
-             return
-        if selected_rule == RULE_KEEP_SUFFIX and not self.suffix_entry_var.get():
-             if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"), self._("delete_suffix_missing", default="Enter suffix for 'Keep Suffix' rule."), master=self.master)
-             return
-        if not self.files_to_delete_cache:
-             rule_name_key = f"rule_{selected_rule}"
-             rule_name_for_log = self._(rule_name_key, default=selected_rule.title())
-             if self.master.winfo_exists(): messagebox.showinfo(self._("delete_by_rule_button", default="Delete Marked"), self._("delete_rule_no_files", default="No files marked for deletion."), master=self.master)
-             self.log_message(self._("delete_rule_no_files", default="No files marked for deletion.") + f" (Rule: {rule_name_for_log})")
+        # <<< MODIFICATION: Collect files to delete directly from treeview >>>
+        files_to_delete_list = []
+        delete_text = self._("tree_action_delete", default="Delete")
+        try:
+            for item_id in tree.get_children(''):
+                if tree.exists(item_id) and tree.set(item_id, "action") == delete_text:
+                    # item_id is the file path
+                    files_to_delete_list.append(item_id)
+        except tk.TclError as e:
+            self.log_message(f"Error reading items to delete from list: {e}")
+            return
+        except Exception as e:
+             self.log_message(f"Unexpected error collecting items for deletion: {e}")
              return
 
-        num_files_to_delete = len(self.files_to_delete_cache)
-        rule_name_key = f"rule_{selected_rule}"
-        rule_name_for_msg = self._(rule_name_key, default=selected_rule.title())
-        confirm_msg_template = self._("delete_confirm_msg", rule_name=rule_name_for_msg, default="Delete marked files based on rule: '{rule_name}'?\nTHIS ACTION CANNOT BE UNDONE.")
+        if not files_to_delete_list:
+             if self.master.winfo_exists():
+                 messagebox.showinfo(
+                     self._("delete_selected_button", default="Delete Marked Files"),
+                     self._("delete_no_files_marked", default="No files are currently marked for deletion in the list."),
+                     master=self.master)
+             self.log_message(self._("delete_no_files_marked", default="No files marked for deletion."))
+             return
+
+        num_files_to_delete = len(files_to_delete_list)
+        # <<< MODIFICATION: Updated confirmation message >>>
+        confirm_msg_template = self._("delete_confirm_msg", default="Permanently delete all files marked 'Delete' in the list?\nTHIS ACTION CANNOT BE UNDONE.")
         confirm_msg = f"{confirm_msg_template}\n\n({num_files_to_delete} files will be permanently deleted)"
 
         confirm = False
         if self.master.winfo_exists():
-            confirm = messagebox.askyesno(title=self._("delete_confirm_title", default="Confirm Deletion"), message=confirm_msg, icon='warning', default='no', master=self.master)
+            confirm = messagebox.askyesno(
+                title=self._("delete_confirm_title", default="Confirm Deletion"),
+                message=confirm_msg,
+                icon='warning',
+                default='no',
+                master=self.master)
 
         if not confirm:
             self.log_message(self._("delete_cancelled", default="Deletion cancelled."))
             return
 
-        self.log_message(self._("delete_starting", rule_name=rule_name_for_msg, default=f"Starting deletion (Rule: {rule_name_for_msg})..."))
+        # <<< MODIFICATION: Use updated log message key >>>
+        self.log_message(self._("delete_starting_selected", default="Starting deletion of manually marked files..."))
         self.set_ui_state("deleting")
 
-        files_to_delete_list_copy = list(self.files_to_delete_cache)
-        thread = threading.Thread(target=self._delete_worker, args=(files_to_delete_list_copy, rule_name_for_msg), daemon=True)
+        # Pass the collected list (already a copy)
+        thread = threading.Thread(target=self._delete_worker, args=(files_to_delete_list,), daemon=True)
         thread.start()
 
-    def _delete_worker(self, files_to_delete, rule_name_for_log):
+    # <<< MODIFICATION: Removed rule_name arg, no longer needed >>>
+    def _delete_worker(self, files_to_delete):
         """ Worker thread for deleting files based on the provided list. """
         if not self.finder or not self.finder.fs:
             self.log_message(self._("error_not_connected", default="Error: Connection lost before Deletion."))
@@ -2477,10 +2637,12 @@ class DuplicateFinderApp:
 
         try:
             if not files_to_delete:
-                self.log_message(self._("delete_rule_no_files", default="No files to delete.") + f" (Worker check; Rule: {rule_name_for_log})")
+                # <<< MODIFICATION: Simplified log message >>>
+                self.log_message(self._("delete_no_files_marked", default="No files to delete.") + " (Worker check)")
             else:
                 deleted_count, total_attempted = self.finder.delete_files(files_to_delete)
                 if deleted_count < total_attempted: deletion_error_occurred = True
+            # Clear results only if deletion was attempted and potentially successful
             if total_attempted > 0: should_clear_results = True
 
         except Exception as e:
@@ -2491,13 +2653,18 @@ class DuplicateFinderApp:
             if self.master.winfo_exists():
                 error_title = self._("error_title", default="Deletion Error")
                 self.master.after(10, lambda et=error_title, em=err_msg: messagebox.showerror(et, em, master=self.master))
+            # Don't clear results if a major error occurred during the process
             should_clear_results = False
         finally:
             if self.master.winfo_exists():
                 if should_clear_results:
-                    self.master.after(10, self.clear_results)
-                    self.master.after(20, lambda: self.log_message(self._("delete_results_cleared", default="Deletion finished. Results cleared.")))
+                     # Use after() to ensure GUI updates happen in the main thread
+                    self.master.after(10, self.clear_results) # Clear data and UI elements
+                    self.master.after(20, lambda: self.log_message(self._("delete_results_cleared", default="Deletion finished. Results cleared."))) # Log after clearing
+                    # Set UI state back to normal *after* clearing is scheduled
+                    self.master.after(30, self.set_ui_state, 'normal')
                 else:
+                    # If deletion wasn't attempted or failed badly, just reset UI state
                     self.master.after(0, self.set_ui_state, 'normal')
 
 
@@ -2544,7 +2711,6 @@ class DuplicateFinderApp:
             self.log_message(self._("chart_error_no_connection", default="Not connected, cannot chart."))
             return
 
-        # <<< MODIFICATION: Get paths from listbox and validate inputs >>>
         scan_listbox = self.widgets.get("scan_path_listbox")
         scan_paths_raw = list(scan_listbox.get(0, tk.END)) if scan_listbox else []
         mount_point_raw = self.string_vars["mount_point"].get()
@@ -2559,7 +2725,6 @@ class DuplicateFinderApp:
         paths_to_check_chart = {"mount_point": mount_point_raw}
         if not self._check_path_chars(paths_to_check_chart, check_scan_paths_from_listbox=True):
             return
-        # <<< END MODIFICATION >>>
 
         self.log_message("Starting scan for file type chart data...")
         self.set_ui_state("charting")
@@ -2569,7 +2734,6 @@ class DuplicateFinderApp:
                                     args=(scan_paths_raw, mount_point_raw), daemon=True)
         thread.start()
 
-    # <<< MODIFICATION: Accepts list of raw paths >>>
     def _show_cloud_file_types_worker(self, scan_paths_raw, mount_point_raw):
         """ Worker thread to scan multiple cloud paths, count types, and schedule chart creation. """
         all_file_counts = collections.Counter() # Aggregate counts here
@@ -2602,7 +2766,10 @@ class DuplicateFinderApp:
                     for dirpath, _, filenames in self.finder.fs.walk_path(fs_dir_path):
                         for filename_obj in filenames:
                             try:
+                                # Use helper to construct path safely
                                 full_path = _build_full_path(str(dirpath), str(filename_obj))
+                                if not full_path: continue # Skip if path construction fails
+
                                 filename = os.path.basename(full_path)
                                 total_files_overall += 1
                                 path_files += 1
@@ -2655,8 +2822,6 @@ class DuplicateFinderApp:
         finally:
             if self.master.winfo_exists():
                 self.master.after(0, self.set_ui_state, 'normal')
-    # <<< END MODIFICATION >>>
-
 
     def _create_pie_chart_window(self, counts, display_path_or_title):
         """ Creates and displays the file type pie chart in a new Toplevel window. """
