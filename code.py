@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 import os
 import configparser
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog, Menu, Toplevel
 import threading
 import time
-from datetime import datetime, timezone, timedelta # Added timezone, timedelta
+from datetime import datetime, timezone, timedelta
 from collections import defaultdict, Counter
 import json
 import traceback
@@ -67,8 +66,10 @@ def resource_path(relative_path):
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
-    except Exception:
+    except AttributeError: # More specific exception
         # If not running as a PyInstaller bundle, use the script's directory
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    except Exception: # Fallback generic exception
         base_path = os.path.abspath(os.path.dirname(__file__))
 
     return os.path.join(base_path, relative_path)
@@ -947,7 +948,8 @@ class DuplicateFileFinder:
             try:
                 self.fs.remove(cloud_path)
                 deleted_count += 1
-                time.sleep(0.05) # Small delay to potentially avoid rate limiting
+                # Optional: Small delay to potentially avoid rate limiting (consider removing if not needed)
+                # time.sleep(0.05)
             except Exception as e:
                 error_log_msg = self._("delete_error_file", path=cloud_path, error=e, default=f"Error deleting {cloud_path}: {e}")
                 self.log(error_log_msg)
@@ -1009,31 +1011,30 @@ class DuplicateFinderApp:
             else:
                 # Log warning if icon not found
                 print(f"Warning: Application icon file not found at '{icon_path}'")
-                self.log_message(f"Warning: Application icon file not found at '{os.path.basename(icon_path)}'")
+                # Use log_message after it's potentially initialized, or just print
+                # self.log_message(f"Warning: Application icon file not found at '{os.path.basename(icon_path)}'")
         except tk.TclError as e:
             # Handle specific Tkinter error loading icon
             icon_err_msg = self._("error_icon_load", path=os.path.basename(icon_path), error=e,
                                   default=f"Error loading icon '{os.path.basename(icon_path)}': {e}")
             print(icon_err_msg)
-            self.log_message(icon_err_msg)
+            # self.log_message(icon_err_msg) # log_message might not be ready yet
         except Exception as e:
             # Catch any other unexpected error during icon loading
             icon_err_msg = self._("error_icon_load", path=os.path.basename(icon_path), error=f"Unexpected error: {e}",
                                   default=f"Unexpected error loading icon '{os.path.basename(icon_path)}': {e}")
             print(icon_err_msg)
-            self.log_message(icon_err_msg)
+            # self.log_message(icon_err_msg) # log_message might not be ready yet
 
         # --- Menu Bar ---
         self.menu_bar = Menu(master)
         master.config(menu=self.menu_bar)
         self.create_menus() # Populate the menu bar
 
-        # --- Create Main Layout Structure (PanedWindow) ---
-        # Use a PanedWindow for resizable sections
-        self.paned_window = ttk.PanedWindow(master, orient=tk.VERTICAL)
-        self.paned_window.pack(fill=tk.BOTH, expand=True, padx=10, pady=10) # Added outer padding
+        # --- Create Main Layout Structure (Using grid instead of PanedWindow) ---
+        # REMOVED PanedWindow initialization and packing
 
-        # --- Build the UI Sections within the PanedWindow ---
+        # --- Build the UI Sections using master.grid ---
         self._build_ui_structure()
 
         # --- Final Setup ---
@@ -1043,7 +1044,10 @@ class DuplicateFinderApp:
 
 
     def _build_ui_structure(self):
-        """Creates and packs/grids all the UI widgets within the main paned_window."""
+        """Creates and grids all the UI widgets directly into the main window (master)."""
+
+        # --- Get master reference for clarity ---
+        master = self.master
 
         # --- Style Configuration ---
         style = ttk.Style()
@@ -1053,16 +1057,24 @@ class DuplicateFinderApp:
         except tk.TclError:
              style.configure("Danger.TButton", foreground="red") # Fallback if font spec fails
 
-        # --- 1. Top Pane: Configuration and Primary Actions ---
-        top_pane = ttk.Frame(self.paned_window, padding=5)
-        # Add to PanedWindow, weight=0 -> no vertical stretch by default
-        self.paned_window.add(top_pane, weight=0)
-        top_pane.columnconfigure(0, weight=1) # Allow content (config frame) to expand horizontally
+        # --- Configure the main window's grid ---
+        master.columnconfigure(0, weight=1) # Main content column expands horizontally
+        # Define rows and their weights
+        # Row 0: Config Frame
+        # Row 1: Action Buttons Frame
+        # Row 2: Rules Frame
+        # Row 3: Results TreeView Frame (EXPAND)
+        # Row 4: Final Action Buttons Frame
+        # Row 5: Log Frame (EXPAND)
+        master.rowconfigure(3, weight=1) # Treeview row expands vertically
+        master.rowconfigure(5, weight=1) # Log row expands vertically (Reduced weight slightly)
 
-        # Configuration Input Fields (within a LabelFrame)
-        config_frame = ttk.LabelFrame(top_pane, text=self._("config_title"), padding=(10, 5))
-        config_frame.grid(row=0, column=0, padx=5, pady=5, sticky="ew") # Fill horizontally
-        config_frame.columnconfigure(1, weight=1) # Entries expand
+
+        # --- 1. Configuration Section ---
+        config_frame = ttk.LabelFrame(master, text=self._("config_title"), padding=(10, 5))
+        # Place in master grid, row 0
+        config_frame.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="ew") # Top padding
+        config_frame.columnconfigure(1, weight=1) # Entries expand horizontally
         self.widgets["config_frame"] = config_frame
 
         # Define config fields: (internal_key, label_translation_key, grid_row)
@@ -1081,49 +1093,39 @@ class DuplicateFinderApp:
 
             var = tk.StringVar()
             self.string_vars[key] = var
-            entry_args = {"textvariable": var} # width removed, relies on grid stretch
+            entry_args = {"textvariable": var}
             if key == "password":
                 entry_args["show"] = "*"
             entry = ttk.Entry(config_frame, **entry_args)
-            entry.grid(row=row, column=1, padx=(2, 5), pady=3, sticky=tk.EW) # Expand horizontally
+            entry.grid(row=row, column=1, padx=(2, 5), pady=3, sticky=tk.EW)
             self.entries[key] = entry
 
-        # Action Buttons Frame (Load, Save, Test, Find)
-        action_button_frame = ttk.Frame(top_pane, padding=(5, 0))
-        action_button_frame.grid(row=1, column=0, padx=5, pady=(5, 10), sticky="ew")
-        # Inner frame to keep buttons left-aligned
+        # --- 2. Action Buttons Frame (Load, Save, Test, Find) ---
+        action_button_frame = ttk.Frame(master, padding=(5, 0))
+        # Place in master grid, row 1
+        action_button_frame.grid(row=1, column=0, padx=10, pady=(0, 5), sticky="ew")
         btn_frame_inner = ttk.Frame(action_button_frame)
-        btn_frame_inner.pack(side=tk.LEFT) # Pack inner frame to the left
+        btn_frame_inner.pack(side=tk.LEFT) # Keep buttons left-aligned
 
-        # Define buttons: (internal_key, translation_key, command, initial_state)
         action_buttons_info = [
             ("load", "load_config_button", self.load_config, tk.NORMAL),
             ("save", "save_config_button", self.save_config, tk.NORMAL),
             ("test_conn", "test_connection_button", self.start_test_connection_thread, tk.NORMAL),
-            ("find", "find_button", self.start_find_duplicates_thread, tk.DISABLED), # Disabled initially
+            ("find", "find_button", self.start_find_duplicates_thread, tk.DISABLED),
         ]
-        # Use pack within the inner frame for simple left-to-right layout
         for idx, (w_key, t_key, cmd, initial_state) in enumerate(action_buttons_info):
-             padx_val = (0, 5) # Space between buttons
+             padx_val = (0, 5)
              button = ttk.Button(btn_frame_inner, text=self._(t_key), command=cmd, state=initial_state)
              button.pack(side=tk.LEFT, padx=padx_val, pady=5)
              self.widgets[f"{w_key}_button"] = button
 
-
-        # --- 2. Middle Pane: Deletion Rules and Results TreeView ---
-        middle_pane = ttk.Frame(self.paned_window, padding=5)
-        # Add to PanedWindow, weight=1 -> WILL EXPAND vertically
-        self.paned_window.add(middle_pane, weight=1)
-        middle_pane.rowconfigure(1, weight=1) # Treeview frame expands
-        middle_pane.columnconfigure(0, weight=1) # Content expands horizontally
-
-        # Deletion Rules (within a LabelFrame)
-        rules_frame = ttk.LabelFrame(middle_pane, text=self._("rules_title"), padding=(10, 5))
-        rules_frame.grid(row=0, column=0, padx=5, pady=(5, 5), sticky="ew") # Fill horizontally
+        # --- 3. Deletion Rules Section ---
+        rules_frame = ttk.LabelFrame(master, text=self._("rules_title"), padding=(10, 5))
+        # Place in master grid, row 2
+        rules_frame.grid(row=2, column=0, padx=10, pady=(5, 5), sticky="ew")
         rules_frame.columnconfigure(2, weight=1) # Allow suffix entry to expand
         self.widgets["rules_frame"] = rules_frame
 
-        # Define rule radio buttons: (translation_key_suffix, value_constant, grid_row)
         rule_options = [
             ("shortest_path", RULE_KEEP_SHORTEST, 0),
             ("longest_path", RULE_KEEP_LONGEST, 1),
@@ -1131,95 +1133,75 @@ class DuplicateFinderApp:
             ("newest", RULE_KEEP_NEWEST, 3),
             ("keep_suffix", RULE_KEEP_SUFFIX, 4)
         ]
-        # self.rule_radios dictionary defined in __init__
         suffix_row_index = -1
 
         for row_idx, (t_key_suffix, value, grid_row) in enumerate(rule_options):
             t_key = f"rule_{t_key_suffix}"
             radio = ttk.Radiobutton(rules_frame, text=self._(t_key),
                                     variable=self.deletion_rule_var, value=value,
-                                    command=self._on_rule_change, state=tk.DISABLED) # Disabled initially
+                                    command=self._on_rule_change, state=tk.DISABLED)
             radio.grid(row=grid_row, column=0, columnspan=1, padx=5, pady=2, sticky="w")
             self.rule_radios[value] = radio
             self.widgets[f"radio_{value}"] = radio
             if value == RULE_KEEP_SUFFIX:
                 suffix_row_index = grid_row
 
-        # Suffix Label and Entry (next to the last radio button)
         lbl = ttk.Label(rules_frame, text=self._("rule_suffix_entry_label"), state=tk.DISABLED)
         lbl.grid(row=suffix_row_index, column=1, padx=(15, 2), pady=2, sticky="e")
         self.widgets["suffix_label"] = lbl
 
-        entry = ttk.Entry(rules_frame, textvariable=self.suffix_entry_var, state=tk.DISABLED) # width removed
-        entry.grid(row=suffix_row_index, column=2, padx=(0, 5), pady=2, sticky="ew") # Expand horizontally
+        entry = ttk.Entry(rules_frame, textvariable=self.suffix_entry_var, state=tk.DISABLED)
+        entry.grid(row=suffix_row_index, column=2, padx=(0, 5), pady=2, sticky="ew")
         self.widgets["suffix_entry"] = entry
         self.entries["suffix"] = entry
 
-        # Results TreeView Frame (for Treeview and Scrollbars)
-        tree_frame = ttk.Frame(middle_pane)
-        tree_frame.grid(row=1, column=0, padx=5, pady=(5, 5), sticky="nsew") # Fills expanding area
-        tree_frame.rowconfigure(0, weight=1) # Treeview expands vertically
-        tree_frame.columnconfigure(0, weight=1) # Treeview expands horizontally
+        # --- 4. Results TreeView Section ---
+        tree_frame = ttk.Frame(master) # Parent is master
+        # Place in master grid, row 3 - THIS ROW EXPANDS
+        tree_frame.grid(row=3, column=0, padx=10, pady=(5, 5), sticky="nsew") # Fill expanding area
+        tree_frame.rowconfigure(0, weight=1) # Treeview expands vertically within frame
+        tree_frame.columnconfigure(0, weight=1) # Treeview expands horizontally within frame
         self.widgets["tree_frame"] = tree_frame
 
-        # Define Treeview Columns
         self.columns = ("action", "path", "modified", "size_mb", "set_id")
         self.tree = ttk.Treeview(tree_frame, columns=self.columns, show="headings", selectmode="none")
         self.widgets["treeview"] = self.tree
 
-        # Define Column Widths and Alignments (adjust as needed)
         self.tree.column("action", width=80, anchor=tk.CENTER, stretch=tk.NO)
-        self.tree.column("path", width=550, anchor=tk.W, stretch=tk.YES) # Allow path to stretch most
+        self.tree.column("path", width=550, anchor=tk.W, stretch=tk.YES)
         self.tree.column("modified", width=150, anchor=tk.W, stretch=tk.NO)
         self.tree.column("size_mb", width=100, anchor=tk.E, stretch=tk.NO)
         self.tree.column("set_id", width=60, anchor=tk.CENTER, stretch=tk.NO)
 
-        # Scrollbars for Treeview
         vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
         hsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
         self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
 
-        # Grid Treeview and Scrollbars
         self.tree.grid(row=0, column=0, sticky='nsew')
         vsb.grid(row=0, column=1, sticky='ns')
         hsb.grid(row=1, column=0, sticky='ew')
 
-        # Define tags for highlighting rows
         self.tree.tag_configure('keep', foreground='darkgreen')
         self.tree.tag_configure('delete', foreground='#CC0000', font=('TkDefaultFont', 9, 'bold'))
+        # Headings setup called later
 
-        # Setup headings text and sorting bind (called later in update_ui_language)
-
-
-        # --- 3. Bottom Pane: Log Area and Final Actions ---
-        bottom_pane = ttk.Frame(self.paned_window, padding=5)
-        # Add to PanedWindow, weight=0 -> no vertical stretch by default for the pane itself
-        self.paned_window.add(bottom_pane, weight=0)
-        # Configure bottom_pane's grid to allow log_frame to expand
-        bottom_pane.columnconfigure(0, weight=1) # Allow content (log frame) to expand horizontally
-        bottom_pane.rowconfigure(1, weight=1) # Allow Log frame row to expand vertically
-
-
-        # Final Action Buttons Frame (Delete, Chart, Save Report)
-        final_action_frame = ttk.Frame(bottom_pane)
-        final_action_frame.grid(row=0, column=0, padx=5, pady=(5,0), sticky="ew")
-        # Inner frame to keep buttons left-aligned
+        # --- 5. Final Action Buttons Frame (Delete, Chart, Save Report) ---
+        final_action_frame = ttk.Frame(master) # Parent is master
+        # Place in master grid, row 4
+        final_action_frame.grid(row=4, column=0, padx=10, pady=(5, 0), sticky="ew")
         final_btn_inner_frame = ttk.Frame(final_action_frame)
-        final_btn_inner_frame.pack(side=tk.LEFT) # Pack inner frame to the left
+        final_btn_inner_frame.pack(side=tk.LEFT) # Keep buttons left-aligned
 
-        # Define final action buttons: (key, t_key, command, state, style)
         final_buttons_info = [
              ("delete", "delete_by_rule_button", self.start_delete_by_rule_thread, tk.DISABLED, "Danger.TButton"),
-             ("chart", "show_chart_button", self.show_cloud_file_types, tk.DISABLED, ""),
-             ("save_list", "save_list_button", self.save_duplicates_report, tk.DISABLED, ""),
+             ("chart", "show_chart_button", self.show_cloud_file_types, tk.DISABLED, ""), # Correctly references the method now
+             ("save_list", "save_list_button", self.save_duplicates_report, tk.DISABLED, ""), # Correctly references the method now
         ]
 
-        # Use pack within the inner frame
         for idx, (w_key, t_key, cmd, initial_state, style_name) in enumerate(final_buttons_info):
-            padx_val = (0, 10) # Increased padding between final buttons
+            padx_val = (0, 10)
             btn_args = {"text": self._(t_key), "command": cmd, "state": initial_state}
             if style_name: btn_args["style"] = style_name
-            # Special handling for chart button text/state based on matplotlib availability
             if w_key == "chart":
                 effective_t_key = t_key if MATPLOTLIB_AVAILABLE else "show_chart_button_disabled"
                 effective_state = initial_state if MATPLOTLIB_AVAILABLE else tk.DISABLED
@@ -1230,15 +1212,15 @@ class DuplicateFinderApp:
             button.pack(side=tk.LEFT, padx=padx_val, pady=5)
             self.widgets[f"{w_key}_button"] = button
 
-        # Log Output Area (within a LabelFrame)
-        log_frame = ttk.LabelFrame(bottom_pane, text=self._("log_title"), padding=(5, 5))
-        log_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=(5,5)) # Fill expanding area
-        # Configure log_frame's grid for the ScrolledText expansion
-        log_frame.rowconfigure(0, weight=1) # Text area expands vertically
-        log_frame.columnconfigure(0, weight=1) # Text area expands horizontally
+        # --- 6. Log Output Area Section ---
+        log_frame = ttk.LabelFrame(master, text=self._("log_title"), padding=(5, 5)) # Parent is master
+        # Place in master grid, row 5 - THIS ROW EXPANDS
+        log_frame.grid(row=5, column=0, padx=10, pady=(0, 10), sticky="nsew") # Bottom padding
+        log_frame.rowconfigure(0, weight=1) # Text area expands vertically within frame
+        log_frame.columnconfigure(0, weight=1) # Text area expands horizontally within frame
         self.widgets["log_frame"] = log_frame
 
-        self.log_text = scrolledtext.ScrolledText(log_frame, wrap=tk.WORD, height=10, # Initial height
+        self.log_text = scrolledtext.ScrolledText(log_frame, wrap=tk.WORD, height=10, # Initial height is less critical now
                                                   state='disabled', relief=tk.SOLID, borderwidth=1,
                                                   font=("TkDefaultFont", 9))
         self.log_text.grid(row=0, column=0, sticky="nsew") # Fills log_frame
@@ -1271,10 +1253,11 @@ class DuplicateFinderApp:
                 json.dump({"language": self.current_language}, f, indent=2)
         except IOError as e:
             print(f"Warning: Could not save language preference to {os.path.basename(pref_path)}: {e}")
-            self.log_message(f"Warning: Could not save language preference: {e}")
+            # Use self.log_message only if it's safe (e.g., GUI is likely up)
+            if hasattr(self, 'log_message'): self.log_message(f"Warning: Could not save language preference: {e}")
         except Exception as e:
              print(f"Error saving language preference: {e}")
-             self.log_message(f"Error saving language preference: {e}")
+             if hasattr(self, 'log_message'): self.log_message(f"Error saving language preference: {e}")
 
     def load_language_preference(self):
         """ Loads the language preference from JSON file, defaulting to DEFAULT_LANG. """
@@ -1406,10 +1389,9 @@ class DuplicateFinderApp:
 
             # Re-apply rule highlighting if data exists (updates Keep/Delete text)
             tree = self.widgets.get("treeview")
-            if self.duplicate_sets and tree and tree.winfo_exists():
-                 # Check if a rule is actually selected before reapplying
-                 if self.deletion_rule_var.get():
-                    self._apply_rule_to_treeview(log_update=False) # Avoid redundant logging during language switch
+            # Add check for rule selection before reapplying
+            if self.duplicate_sets and self.deletion_rule_var.get() and tree and tree.winfo_exists():
+                self._apply_rule_to_treeview(log_update=False) # Avoid redundant logging during language switch
 
             print(f"UI Language update to {self.current_language} complete.")
 
@@ -1471,10 +1453,25 @@ class DuplicateFinderApp:
 
         # Prepare Data for Sorting
         items_to_sort = []
-        min_datetime_sort = datetime.min.replace(tzinfo=timezone.utc) + timedelta(seconds=1)
-        max_datetime_sort = datetime.max.replace(tzinfo=timezone.utc) - timedelta(seconds=1)
-        min_str_sort = ""
-        max_str_sort = "~" # Sorts after most common characters
+        # Handle potential comparison issues between timezone-aware and naive datetimes safely
+        now_aware = datetime.now(timezone.utc) # Use a fixed reference point
+        min_datetime_sort = datetime.min.replace(tzinfo=timezone.utc)
+        max_datetime_sort = datetime.max.replace(tzinfo=timezone.utc) - timedelta(seconds=1) # Avoid exact max
+
+        def get_sortable_datetime(dt_obj):
+            """ Helper to make datetimes sortable, handling None and naive vs aware """
+            if isinstance(dt_obj, datetime):
+                if dt_obj.tzinfo is None or dt_obj.tzinfo.utcoffset(dt_obj) is None:
+                     # Option 1: Treat naive as UTC (simplest if consistency is assumed)
+                     # return dt_obj.replace(tzinfo=timezone.utc)
+                     # Option 2: Treat naive as incomparable (use min/max) - safer if mix exists
+                     return min_datetime_sort if self._sort_ascending else max_datetime_sort
+                else:
+                    # Already aware
+                    return dt_obj
+            else:
+                # Not a datetime object (or None)
+                return min_datetime_sort if self._sort_ascending else max_datetime_sort
 
         for item_id in tree.get_children(''):
             if item_id in self.treeview_item_map:
@@ -1484,15 +1481,7 @@ class DuplicateFinderApp:
                     if col == 'path':
                         sort_value = file_info.get('path', '').lower()
                     elif col == 'modified':
-                        dt_obj = file_info.get('modified')
-                        # Ensure timezone-aware comparison if possible, otherwise naive
-                        if dt_obj and dt_obj.tzinfo is None:
-                            # Fallback: treat naive as UTC for sorting? Or use min/max?
-                            # Using min/max is safer for comparison consistency if mix exists
-                             sort_value = min_datetime_sort if self._sort_ascending else max_datetime_sort
-                        else:
-                            sort_value = dt_obj if isinstance(dt_obj, datetime) else (min_datetime_sort if self._sort_ascending else max_datetime_sort)
-
+                        sort_value = get_sortable_datetime(file_info.get('modified'))
                     elif col == 'size_mb':
                         # Sort by actual byte size for accuracy, not formatted MB string
                         sort_value = file_info.get('size', 0) if file_info.get('size') is not None else 0
@@ -1509,17 +1498,18 @@ class DuplicateFinderApp:
 
                 except Exception as e:
                     print(f"Error getting sort value for item {item_id}, col {col}: {e}")
+                    # Provide default sort value based on column type for robustness
                     default_sort_val = 0
                     if col == 'modified': default_sort_val = min_datetime_sort if self._sort_ascending else max_datetime_sort
-                    elif col in ['path', 'action']: default_sort_val = min_str_sort if self._sort_ascending else max_str_sort
+                    elif col in ['path', 'action']: default_sort_val = "" if self._sort_ascending else "~"
                     items_to_sort.append((default_sort_val, item_id))
 
         # Perform the Sort
         try:
             items_to_sort.sort(key=lambda x: x[0], reverse=not self._sort_ascending)
         except TypeError as te:
-            # This often happens comparing timezone-aware and naive datetimes
-            self.log_message(f"Error: Could not sort column '{col}'. Inconsistent data types found (e.g., dates with/without timezone). ({te})")
+            # This might still happen if get_sortable_datetime logic changes or unforeseen types exist
+            self.log_message(f"Error: Could not sort column '{col}'. Inconsistent data types found. ({te})")
             print(f"Sorting TypeError for column {col}: {te}")
             # Attempt fallback sort by string representation
             try:
@@ -1534,7 +1524,8 @@ class DuplicateFinderApp:
         # Reorder Items in the Treeview
         for i, (_, item_id) in enumerate(items_to_sort):
             try:
-                tree.move(item_id, '', i)
+                if tree.exists(item_id): # Check existence before moving
+                    tree.move(item_id, '', i)
             except tk.TclError as e:
                 print(f"Error moving tree item {item_id}: {e}")
 
@@ -1584,7 +1575,9 @@ class DuplicateFinderApp:
         except Exception as e:
             print(f"Unexpected error appending log: {e}\nMessage: {message}")
             # Try to restore state even on unexpected error
-            try: log_widget.configure(state=current_state)
+            try:
+                if log_widget and log_widget.winfo_exists():
+                    log_widget.configure(state=current_state)
             except: pass
 
     def load_config(self):
@@ -1595,6 +1588,7 @@ class DuplicateFinderApp:
         try:
             if not os.path.exists(config_path):
                  self.log_message(self._("status_config_not_found", file=os.path.basename(config_path), default=f"Config file '{os.path.basename(config_path)}' not found."))
+                 # Clear fields if config not found
                  for key in ["address", "account", "password", "scan_path", "mount_point"]:
                      if key in self.string_vars: self.string_vars[key].set("")
                  return
@@ -1650,7 +1644,9 @@ class DuplicateFinderApp:
             if os.path.exists(config_path):
                  config_old = configparser.ConfigParser()
                  # Read existing config to preserve other sections
-                 config_old.read(config_path, encoding='utf-8')
+                 # Use read_file to avoid clearing existing config object if file doesn't exist
+                 with open(config_path, 'r', encoding='utf-8') as f_old:
+                     config_old.read_file(f_old)
                  for section in config_old.sections():
                      if section != 'config' and not config.has_section(section):
                          config.add_section(section)
@@ -1731,6 +1727,7 @@ class DuplicateFinderApp:
         Modes: 'initial', 'normal' (connected/idle), 'testing_connection', 'finding', 'deleting', 'charting'
         """
         is_idle_state = mode in ['initial', 'normal']
+        # Ensure finder object exists before accessing fs attribute
         is_connected = mode != 'initial' and self.finder is not None and self.finder.fs is not None
 
         # Determine derived states
@@ -1938,9 +1935,8 @@ class DuplicateFinderApp:
             # Call the core logic in the finder class
             found_duplicates = self.finder.find_duplicates()
             end_time = time.time()
-            # Log duration using the finder's log method (which uses the translator)
-            # Note: finder already logs duration internally now. No need to repeat here.
-            # self.log_message(f"Core duplicate finding operation took {end_time - start_time:.2f} seconds.") # Redundant
+            # Finder already logs duration internally.
+            # self.log_message(f"Core duplicate finding operation took {end_time - start_time:.2f} seconds.")
 
             # Schedule the processing of results back on the main GUI thread
             if self.master.winfo_exists():
@@ -1968,20 +1964,21 @@ class DuplicateFinderApp:
         if self.duplicate_sets:
             # Populate the treeview with the found duplicates
             self.populate_treeview()
-            # If a rule was already selected, re-apply it visually (though cache is empty initially)
+            # If a rule was already selected, re-apply it visually
             if self.deletion_rule_var.get():
                 self._apply_rule_to_treeview()
         else:
             # Clear treeview if no duplicates found
             tree = self.widgets.get("treeview")
             if tree and tree.winfo_exists():
-                try: tree.delete(*tree.get_children())
+                try:
+                    if tree.get_children(): # Only delete if items exist
+                        tree.delete(*tree.get_children())
                 except tk.TclError: pass
             self.treeview_item_map.clear()
             # Finder already logs "no duplicates found" message
 
         # Set UI state back to normal (enabling rules/buttons if duplicates were found)
-        # This should happen AFTER populate_treeview potentially enables rules
         self.set_ui_state('normal')
 
 
@@ -2006,7 +2003,8 @@ class DuplicateFinderApp:
         tree = self.widgets.get("treeview")
         if tree and tree.winfo_exists():
             try:
-                tree.delete(*tree.get_children()) # Remove all items
+                if tree.get_children(): # Only delete if items exist
+                    tree.delete(*tree.get_children()) # Remove all items
                 # Reset headers (clears sort indicators) after clearing
                 self.setup_treeview_headings()
             except tk.TclError: pass # Handle if tree is destroyed
@@ -2024,9 +2022,9 @@ class DuplicateFinderApp:
 
         count = len(self.duplicate_sets)
         if count == 0:
-             # This case should ideally be handled before calling populate_treeview
              self.log_message("No duplicate sets to display.")
-             try: tree.delete(*tree.get_children())
+             try:
+                 if tree.get_children(): tree.delete(*tree.get_children())
              except tk.TclError: pass
              self.treeview_item_map.clear()
              return
@@ -2036,7 +2034,7 @@ class DuplicateFinderApp:
 
         # --- Clear existing tree content ---
         try:
-            tree.delete(*tree.get_children())
+            if tree.get_children(): tree.delete(*tree.get_children())
         except tk.TclError:
             self.log_message("Error clearing treeview before population.")
             return # Cannot proceed if clearing failed
@@ -2091,10 +2089,16 @@ class DuplicateFinderApp:
                     item_id = path
 
                     # Insert into treeview
-                    tree.insert("", tk.END, iid=item_id, values=values, tags=()) # No tags initially
-                    # Store the full file_info dict mapped to its item ID (path)
-                    self.treeview_item_map[item_id] = file_info
-                    items_inserted += 1
+                    # Check if item with this ID already exists (should not happen if cleared correctly, but safety check)
+                    if not tree.exists(item_id):
+                         tree.insert("", tk.END, iid=item_id, values=values, tags=()) # No tags initially
+                         # Store the full file_info dict mapped to its item ID (path)
+                         self.treeview_item_map[item_id] = file_info
+                         items_inserted += 1
+                    else:
+                         self.log_message(f"Warning: Item with path '{path}' already exists in tree. Skipping duplicate insertion.")
+                         items_failed += 1
+
 
                 except tk.TclError as e:
                      # Handle errors during insertion (e.g., if path is somehow duplicated as iid)
@@ -2173,10 +2177,11 @@ class DuplicateFinderApp:
         if not selected_rule:
             self.files_to_delete_cache = []
             try:
-                for item_id in self.treeview_item_map.keys():
-                    if tree.exists(item_id):
-                         tree.set(item_id, "action", "") # Clear action text
-                         tree.item(item_id, tags=())     # Clear tags (highlighting)
+                if tree.winfo_exists(): # Check tree again
+                    for item_id in self.treeview_item_map.keys():
+                        if tree.exists(item_id):
+                            tree.set(item_id, "action", "") # Clear action text
+                            tree.item(item_id, tags=())     # Clear tags (highlighting)
             except tk.TclError: pass
             self.set_ui_state('normal') # Reset UI state (likely disables delete button)
             return
@@ -2208,35 +2213,32 @@ class DuplicateFinderApp:
 
             # --- Update Treeview items visually ---
             tree_update_start = time.time()
-            # Check if tree exists *before* iterating (it might be destroyed by user action)
+            # Check if tree exists *before* iterating
             if not tree.winfo_exists():
                 raise tk.TclError("Treeview destroyed during rule application")
 
             # Iterate over a copy of the keys, as map might change if errors occur
             for item_id in list(self.treeview_item_map.keys()):
-                 # Check if the item still exists in the treeview
-                 if not tree.exists(item_id): continue
+                 # Check if the item still exists in the treeview AND map
+                 if tree.exists(item_id) and item_id in self.treeview_item_map:
+                     file_info = self.treeview_item_map[item_id] # Already checked existence in map
+                     path = file_info.get('path')
+                     if not path: continue # Skip if path somehow missing
 
-                 file_info = self.treeview_item_map.get(item_id)
-                 if not file_info: continue # Should not happen if item exists, but check anyway
+                     # Determine action and tag based on whether path is in the delete set
+                     is_marked_for_delete = (path in files_to_delete_paths_set)
+                     action_text = delete_text if is_marked_for_delete else keep_text
+                     item_tags = ('delete',) if is_marked_for_delete else ('keep',)
 
-                 path = file_info.get('path')
-                 if not path: continue # Skip if path somehow missing
-
-                 # Determine action and tag based on whether path is in the delete set
-                 is_marked_for_delete = (path in files_to_delete_paths_set)
-                 action_text = delete_text if is_marked_for_delete else keep_text
-                 item_tags = ('delete',) if is_marked_for_delete else ('keep',)
-
-                 # Update the treeview item's "Action" column and apply the tag
-                 tree.set(item_id, "action", action_text)
-                 tree.item(item_id, tags=item_tags)
+                     # Update the treeview item's "Action" column and apply the tag
+                     tree.set(item_id, "action", action_text)
+                     tree.item(item_id, tags=item_tags)
 
             tree_update_end = time.time()
             if log_update:
                 self.log_message(self._("status_rule_applied", delete_count=delete_count, default=f"Rule applied. {delete_count} files marked for deletion."))
                 # Optional: Log performance
-                # self.log_message(f"Treeview visual update took {tree_update_end - tree_update_start:.3f}s")
+                # print(f"Treeview visual update took {tree_update_end - tree_update_start:.3f}s")
 
 
         except ValueError as ve:
@@ -2273,7 +2275,7 @@ class DuplicateFinderApp:
             if selected_rule and log_update:
                 end_time = time.time()
                 # Optional: Log total performance
-                # self.log_message(f"Rule determination & tree update took {end_time-start_time:.3f}s total")
+                # print(f"Rule determination & tree update took {end_time-start_time:.3f}s total")
 
             # ALWAYS Update UI State after applying rule (or attempting to)
             # This will correctly enable/disable the delete button based on cache state
@@ -2297,7 +2299,8 @@ class DuplicateFinderApp:
              # Raise error if suffix rule is chosen but no suffix provided
              raise ValueError(self._("delete_suffix_missing", default="Suffix is required for the 'Keep Suffix' rule."))
         # Validate rule value against known constants
-        if rule not in [RULE_KEEP_SHORTEST, RULE_KEEP_LONGEST, RULE_KEEP_OLDEST, RULE_KEEP_NEWEST, RULE_KEEP_SUFFIX]:
+        valid_rules = {RULE_KEEP_SHORTEST, RULE_KEEP_LONGEST, RULE_KEEP_OLDEST, RULE_KEEP_NEWEST, RULE_KEEP_SUFFIX}
+        if rule not in valid_rules:
              raise ValueError(f"Internal Error: Unknown deletion rule '{rule}'.")
 
         files_to_delete = []
@@ -2313,7 +2316,7 @@ class DuplicateFinderApp:
              sorted_candidates = sorted(candidates, key=lambda f: (len(f.get('path', '')), f.get('path', '')))
              winner = sorted_candidates[0] # Shortest path wins
 
-             # Log the tie-break decision
+             # Log the tie-break decision only if a tie actually occurred (more than 1 candidate)
              log_func(self._("warning_tie_break",
                               prefix=tie_break_prefix,
                               reason=reason_for_tiebreak,
@@ -2337,27 +2340,28 @@ class DuplicateFinderApp:
 
                 # --- Apply the selected rule to find candidates ---
                 if rule == RULE_KEEP_SHORTEST:
-                    # Find min path length, allow for missing path attribute
-                    min_len = min(len(f.get('path', '')) for f in files_in_set)
-                    candidates = [f for f in files_in_set if len(f.get('path', '')) == min_len]
+                    # Ensure paths exist for comparison
+                    valid_files = [f for f in files_in_set if f.get('path') is not None]
+                    if not valid_files: continue # Skip set if no paths found
+                    min_len = min(len(f.get('path', '')) for f in valid_files)
+                    candidates = [f for f in valid_files if len(f.get('path', '')) == min_len]
                     reason_for_tiebreak = f"Multiple files have min path length ({min_len})"
 
                 elif rule == RULE_KEEP_LONGEST:
-                    # Find max path length
-                    max_len = max(len(f.get('path', '')) for f in files_in_set)
-                    candidates = [f for f in files_in_set if len(f.get('path', '')) == max_len]
+                    valid_files = [f for f in files_in_set if f.get('path') is not None]
+                    if not valid_files: continue
+                    max_len = max(len(f.get('path', '')) for f in valid_files)
+                    candidates = [f for f in valid_files if len(f.get('path', '')) == max_len]
                     reason_for_tiebreak = f"Multiple files have max path length ({max_len})"
 
                 elif rule == RULE_KEEP_OLDEST:
                     # Filter for files with valid datetime objects first
                     valid_files = [f for f in files_in_set if isinstance(f.get('modified'), datetime)]
                     if not valid_files:
-                        # If no valid dates, log warning and consider all files for tie-break
                         log_func(self._("warning_rule_no_date", set_id=set_id_for_log, rule=rule, default=f"Warning: {set_id_for_log} - Cannot apply '{rule}': No valid dates. Keeping shortest path."))
-                        candidates = list(files_in_set) # All files are potential candidates now
+                        candidates = list(files_in_set) # Fallback: consider all original files
                         reason_for_tiebreak = "No valid dates found"
                     else:
-                        # Find the minimum (oldest) date among valid files
                         min_date = min(f['modified'] for f in valid_files)
                         candidates = [f for f in valid_files if f['modified'] == min_date]
                         reason_for_tiebreak = f"Multiple files have oldest date ({min_date.strftime(DATE_FORMAT)})"
@@ -2377,17 +2381,26 @@ class DuplicateFinderApp:
                     suffix_lower = suffix_value.lower() # Case-insensitive comparison
                     candidates = [f for f in files_in_set if f.get('path', '').lower().endswith(suffix_lower)]
                     if not candidates:
-                        # If no file matches the suffix, log warning and consider all for tie-break
                          log_func(self._("warning_rule_no_suffix_match", set_id=set_id_for_log, suffix=suffix_value, default=f"Warning: {set_id_for_log} - No files match suffix '{suffix_value}'. Keeping shortest path."))
-                         candidates = list(files_in_set)
+                         candidates = list(files_in_set) # Fallback: consider all original files
                          reason_for_tiebreak = f"No files match suffix '{suffix_value}'"
                     else:
                          reason_for_tiebreak = f"Multiple files match suffix '{suffix_value}'"
 
                 # --- Apply Tie-breaker if needed ---
-                # Pass the specific reason if tie-breaking occurs
-                full_reason = f"{set_id_for_log} - {reason_for_tiebreak}" if len(candidates) > 1 else reason_for_tiebreak
-                keep_file_info = tie_break_shortest_path(candidates, full_reason)
+                # Only call tie-breaker if more than one candidate remains, or if falling back due to rule failure
+                if len(candidates) > 1 or (not candidates and rule in [RULE_KEEP_OLDEST, RULE_KEEP_NEWEST, RULE_KEEP_SUFFIX]):
+                    # If falling back, candidates list was reset to files_in_set
+                    if not candidates: candidates = list(files_in_set) # Ensure candidates is populated for tiebreak
+                    # Pass the specific reason if tie-breaking occurs
+                    full_reason = f"{set_id_for_log} - {reason_for_tiebreak}"
+                    keep_file_info = tie_break_shortest_path(candidates, full_reason)
+                elif len(candidates) == 1:
+                     keep_file_info = candidates[0] # Only one candidate, it wins automatically
+                else:
+                     # No candidates found initially (e.g., shortest/longest path check found nothing - should be impossible if list > 1)
+                     # Or if rule failed and fallback also resulted in empty candidates (e.g. files_in_set was empty/invalid)
+                     keep_file_info = None
 
                 # --- Add Files to Delete List ---
                 if keep_file_info and keep_file_info.get('path'):
@@ -2398,7 +2411,7 @@ class DuplicateFinderApp:
                         if path and path != keep_path:
                             files_to_delete.append(path)
                 else:
-                     # Log if no file could be selected to keep (should be rare)
+                     # Log if no file could be selected to keep
                      log_func(self._("warning_rule_failed_selection", set_id=set_id_for_log, rule=rule, default=f"Internal Warning: {set_id_for_log} - Rule '{rule}' failed to select file to keep. Skipping deletion for this set."))
 
             except Exception as e:
@@ -2475,37 +2488,36 @@ class DuplicateFinderApp:
                                   daemon=True)
         thread.start()
 
-
     def _delete_worker(self, files_to_delete, rule_name_for_log):
         """ Worker thread for deleting files based on the provided list. """
         # Check connection state within the thread
         if not self.finder or not self.finder.fs:
-            self.log_message(self._("error_not_connected", default="Error: Connection lost before Deletion could execute."))
-            if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal') # Reset UI state
+            self.log_message(
+                self._("error_not_connected", default="Error: Connection lost before Deletion could execute."))
+            if self.master.winfo_exists():
+                self.master.after(0, self.set_ui_state, 'normal')  # Reset UI state
             return
 
         deleted_count = 0
         total_attempted = len(files_to_delete)
         deletion_error_occurred = False
+        should_clear_results = False  # Flag to control clearing results
 
         try:
             if not files_to_delete:
-                 # This check is mostly redundant due to the check before starting thread, but safe to keep
-                 self.log_message(self._("delete_rule_no_files", default="No files to delete.") + f" (Worker check; Rule: {rule_name_for_log})")
+                # This check is mostly redundant due to the check before starting thread, but safe to keep
+                self.log_message(self._("delete_rule_no_files",
+                                        default="No files to delete.") + f" (Worker check; Rule: {rule_name_for_log})")
             else:
                 # Call the finder's delete method
                 deleted_count, total_attempted = self.finder.delete_files(files_to_delete)
                 # Finder logs completion and errors internally now
                 if deleted_count < total_attempted:
-                    deletion_error_occurred = True # Track if any errors occurred
+                    deletion_error_occurred = True  # Track if any errors occurred
 
-            # Schedule GUI update after deletion attempt finishes
-            if self.master.winfo_exists():
-                # IMPORTANT: Always clear results after delete attempt, forcing a re-scan.
-                # Use master.after(10,...) to allow potential error popups or final log messages to appear first
-                self.master.after(10, self.clear_results)
-                # Add a log message confirming results are cleared
-                self.master.after(20, lambda: self.log_message(self._("delete_results_cleared", default="Deletion finished. Results cleared.")))
+            # If deletion was attempted (even if partially failed), mark results for clearing
+            if total_attempted > 0:
+                should_clear_results = True
 
         except Exception as e:
             # Catch unexpected errors during the deletion process itself
@@ -2514,33 +2526,43 @@ class DuplicateFinderApp:
             self.log_message(err_msg)
             self.log_message(traceback.format_exc())
             if self.master.winfo_exists():
-                 error_title = self._("error_title", default="Deletion Error")
-                 # Schedule error popup in main thread
-                 self.master.after(10, lambda et=error_title, em=err_msg: messagebox.showerror(et, em, master=self.master))
-                 # On high-level error, just reset UI state, don't necessarily clear results
-                 # unless the clear_results is called in the finally block of the main try.
-                 # Let's keep the clear_results in the successful path only for now.
-                 self.master.after(0, self.set_ui_state, 'normal')
+                error_title = self._("error_title", default="Deletion Error")
+                # Schedule error popup in main thread
+                self.master.after(10,
+                                  lambda et=error_title, em=err_msg: messagebox.showerror(et, em, master=self.master))
+            # Do not clear results on unexpected error, allow user to see state
+            should_clear_results = False
+
         finally:
-            # Ensure UI state is reset if not handled by specific paths above
-            # However, the successful path already schedules clear_results which calls set_ui_state('normal')
-            # And the error path schedules set_ui_state('normal')
-            # So, an explicit call here might be redundant but safe.
+            # --- Actions to perform after try/except, regardless of outcome ---
+            # Ensure this finally block is correctly indented relative to the try/except
             if self.master.winfo_exists():
-                 # Check if clear_results wasn't already scheduled
-                 # This logic is tricky, maybe rely on the paths above.
-                 # Let's remove the finally block state reset for now to avoid potential conflicts.
-                 pass
+                # Schedule results clearing if flagged
+                if should_clear_results:
+                    # IMPORTANT: Clear results after delete attempt, forcing a re-scan.
+                    # Use master.after(10,...) to allow potential error popups or final log messages to appear first
+                    self.master.after(10, self.clear_results)
+                    # Add a log message confirming results are cleared
+                    self.master.after(20, lambda: self.log_message(
+                        self._("delete_results_cleared", default="Deletion finished. Results cleared.")))
+                    # Note: clear_results() internally calls set_ui_state('normal')
+                else:
+                    # If results are not being cleared (e.g., due to unexpected error),
+                    # ensure the UI is re-enabled.
+                    self.master.after(0, self.set_ui_state, 'normal')  # Reset UI state directly
 
 
+    # --- Methods related to Report Saving and Charting ---
+    # !!! CORRECTED INDENTATION FOR METHODS BELOW !!!
 
     def save_duplicates_report(self):
         """ Saves the report of FOUND duplicate file sets to a text file. """
         # Check if there are any duplicates found and stored
         if not self.duplicate_sets:
-            if self.master.winfo_exists(): messagebox.showinfo(self._("save_list_button", default="Save Report"),
-                                self._("save_report_no_data", default="No duplicate sets found to save."),
-                                master=self.master)
+            if self.master.winfo_exists(): messagebox.showinfo(
+                self._("save_list_button", default="Save Report"),
+                self._("save_report_no_data", default="No duplicate sets found to save."),
+                master=self.master)
             self.log_message(self._("save_report_no_data", default="No duplicate sets available to save."))
             return
 
@@ -2550,19 +2572,21 @@ class DuplicateFinderApp:
 
         file_path = None
         try:
-             # Open the "Save As" dialog
-             file_path = filedialog.asksaveasfilename(
-                 defaultextension=".txt",
-                 filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
-                 title=self._("save_list_button", default="Save Found Duplicates Report As..."),
-                 initialfile=initial_filename,
-                 parent=self.master # Ensure dialog is modal to the main window
-             )
+            # Open the "Save As" dialog
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".txt",
+                filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+                title=self._("save_list_button", default="Save Found Duplicates Report As..."),
+                initialfile=initial_filename,
+                parent=self.master  # Ensure dialog is modal to the main window
+            )
         except Exception as fd_e:
-             # Catch errors opening the dialog itself (rare)
-             self.log_message(f"Error opening save file dialog: {fd_e}")
-             if self.master.winfo_exists(): messagebox.showerror(self._("error_title", default="Error"), f"Could not open save dialog: {fd_e}", master=self.master)
-             return
+            # Catch errors opening the dialog itself (rare)
+            self.log_message(f"Error opening save file dialog: {fd_e}")
+            if self.master.winfo_exists(): messagebox.showerror(self._("error_title", default="Error"),
+                                                                f"Could not open save dialog: {fd_e}",
+                                                                master=self.master)
+            return
 
         # If the user selected a file (didn't cancel)
         if file_path:
@@ -2574,39 +2598,46 @@ class DuplicateFinderApp:
                 messagebox.showinfo(
                     self._("save_list_button", default="Report Saved"),
                     # Use the saved message from finder's log if desired, or keep generic one
-                    self._("save_report_saved", file=os.path.basename(file_path), default="Report saved successfully."),
+                    self._("save_report_saved", file=os.path.basename(file_path),
+                            default="Report saved successfully."),
                     master=self.master)
         else:
-             # User cancelled the save dialog
-             self.log_message("Save report operation cancelled by user.")
-
+            # User cancelled the save dialog
+            self.log_message("Save report operation cancelled by user.")
 
     def show_cloud_file_types(self):
         """ Handles 'Show Cloud File Types' click. Validates prerequisites and starts worker thread. """
         # 1. Check if Matplotlib is available
         if not MATPLOTLIB_AVAILABLE:
-            if self.master.winfo_exists(): messagebox.showwarning(self._("chart_error_title", default="Chart Error"),
-                                   self._("chart_error_no_matplotlib", default="Matplotlib library not found. Please install it."),
-                                   master=self.master)
-            self.log_message(self._("chart_error_no_matplotlib", default="Matplotlib not found, cannot show chart."))
+            if self.master.winfo_exists(): messagebox.showwarning(
+                self._("chart_error_title", default="Chart Error"),
+                self._("chart_error_no_matplotlib", default="Matplotlib library not found. Please install it."),
+                master=self.master)
+            self.log_message(
+                self._("chart_error_no_matplotlib", default="Matplotlib not found, cannot show chart."))
             return
 
         # 2. Check CloudDrive Connection
         if not self.finder or not self.finder.fs:
-            if self.master.winfo_exists(): messagebox.showwarning(self._("chart_error_title", default="Chart Error"),
-                                   self._("chart_error_no_connection", default="Not connected to CloudDrive. Cannot scan for chart data."),
-                                   master=self.master)
-            self.log_message(self._("chart_error_no_connection", default="Not connected, cannot generate chart."))
+            if self.master.winfo_exists(): messagebox.showwarning(
+                self._("chart_error_title", default="Chart Error"),
+                self._("chart_error_no_connection",
+                        default="Not connected to CloudDrive. Cannot scan for chart data."),
+                master=self.master)
+            self.log_message(
+                self._("chart_error_no_connection", default="Not connected, cannot generate chart."))
             return
 
         # 3. Validate Required Inputs for Chart Scan
         scan_path_raw = self.string_vars["scan_path"].get()
         mount_point_raw = self.string_vars["mount_point"].get()
         if not scan_path_raw or not mount_point_raw:
-             error_msg = self._("error_input_missing_chart", default="Root Path to Scan and Mount Point are required to generate the chart.")
-             if self.master.winfo_exists(): messagebox.showwarning(self._("error_input_title", default="Input Error"), error_msg, master=self.master)
-             self.log_message(error_msg)
-             return
+            error_msg = self._("error_input_missing_chart",
+                                default="Root Path to Scan and Mount Point are required to generate the chart.")
+            if self.master.winfo_exists(): messagebox.showwarning(
+                self._("error_input_title", default="Input Error"), error_msg, master=self.master)
+            self.log_message(error_msg)
+            return
 
         # 4. Validate Path Characters
         paths_to_check_chart = {
@@ -2614,17 +2645,16 @@ class DuplicateFinderApp:
             "mount_point": mount_point_raw
         }
         if not self._check_path_chars(paths_to_check_chart):
-             # Error message handled by _check_path_chars
-             return
+            # Error message handled by _check_path_chars
+            return
 
         # 5. Start Worker Thread
         self.log_message("Starting scan for file type chart data...")
-        self.set_ui_state("charting") # Disable UI during chart scan
+        self.set_ui_state("charting")  # Disable UI during chart scan
 
         thread = threading.Thread(target=self._show_cloud_file_types_worker,
-                                  args=(scan_path_raw, mount_point_raw), daemon=True)
+                                    args=(scan_path_raw, mount_point_raw), daemon=True)
         thread.start()
-
 
     def _show_cloud_file_types_worker(self, scan_path_raw, mount_point_raw):
         """ Worker thread to scan cloud files, count types, and schedule chart creation. """
@@ -2634,93 +2664,103 @@ class DuplicateFinderApp:
         scan_error = None
 
         try:
-             # --- Pre-scan Checks ---
-             if not self.finder:
-                  self.log_message("Error: Finder object not initialized. Cannot perform chart scan.")
-                  if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
-                  return
+            # --- Pre-scan Checks ---
+            if not self.finder:
+                self.log_message("Error: Finder object not initialized. Cannot perform chart scan.")
+                if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
+                return
 
-             # Calculate the effective filesystem path
-             fs_dir_path = self.finder.calculate_fs_path(scan_path_raw, mount_point_raw)
-             if fs_dir_path is None:
-                 self.log_message("Chart generation aborted due to path calculation error.")
-                 if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
-                 return
+            # Calculate the effective filesystem path
+            fs_dir_path = self.finder.calculate_fs_path(scan_path_raw, mount_point_raw)
+            if fs_dir_path is None:
+                self.log_message("Chart generation aborted due to path calculation error.")
+                if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
+                return
 
-             # Check connection again within thread
-             if not self.finder.fs:
-                 self.log_message(self._("chart_error_no_connection", default="Cannot chart: Connection lost before scan."))
-                 if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
-                 return
+            # Check connection again within thread
+            if not self.finder.fs:
+                self.log_message(
+                    self._("chart_error_no_connection", default="Cannot chart: Connection lost before scan."))
+                if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
+                return
 
-             # --- Perform Scan ---
-             self.log_message(self._("chart_status_scanning_cloud", path=fs_dir_path, default=f"Scanning '{fs_dir_path}' for file types..."))
-             scan_start_time = time.time()
-             try:
-                 # Use walk_path to iterate through files recursively
-                 for _, _, filenames in self.finder.fs.walk_path(fs_dir_path):
-                     for filename_obj in filenames:
-                         try:
-                            filename = str(filename_obj) # Ensure filename is a string
+            # --- Perform Scan ---
+            self.log_message(self._("chart_status_scanning_cloud", path=fs_dir_path,
+                                    default=f"Scanning '{fs_dir_path}' for file types..."))
+            scan_start_time = time.time()
+            try:
+                # Use walk_path to iterate through files recursively
+                for _, _, filenames in self.finder.fs.walk_path(fs_dir_path):
+                    for filename_obj in filenames:
+                        try:
+                            filename = str(filename_obj)  # Ensure filename is a string
                             total_files += 1
                             # Get extension, handle files with no extension
                             _root, ext = os.path.splitext(filename)
-                            ext_label = ext.lower() if ext else self._("chart_label_no_extension", default="[No Ext]")
+                            ext_label = ext.lower() if ext else self._("chart_label_no_extension",
+                                                                        default="[No Ext]")
                             file_counts[ext_label] += 1
-                         except Exception as inner_e:
-                             # Log errors processing individual filenames during scan
-                             self.log_message(f"Warning: Error processing filename '{filename_obj}' during chart scan: {inner_e}")
+                        except Exception as inner_e:
+                            # Log errors processing individual filenames during scan
+                            self.log_message(
+                                f"Warning: Error processing filename '{filename_obj}' during chart scan: {inner_e}")
 
-             except Exception as e:
-                 # Catch errors during the walk_path operation itself
-                 scan_error = e
-                 error_msg = self._("chart_error_cloud_scan", path=fs_dir_path, error=e, default=f"Error scanning cloud path '{fs_dir_path}' for chart data: {e}")
-                 self.log_message(error_msg)
-                 self.log_message(f"Chart Scan Error Details: {traceback.format_exc()}")
-                 if self.master.winfo_exists():
-                      error_title = self._("chart_error_title", default="Chart Error")
-                      # Schedule error popup in main thread
-                      self.master.after(10, lambda et=error_title, em=error_msg: messagebox.showerror(et, em, master=self.master))
+            except Exception as e:
+                # Catch errors during the walk_path operation itself
+                scan_error = e
+                error_msg = self._("chart_error_cloud_scan", path=fs_dir_path, error=e,
+                                    default=f"Error scanning cloud path '{fs_dir_path}' for chart data: {e}")
+                self.log_message(error_msg)
+                self.log_message(f"Chart Scan Error Details: {traceback.format_exc()}")
+                if self.master.winfo_exists():
+                    error_title = self._("chart_error_title", default="Chart Error")
+                    # Schedule error popup in main thread
+                    self.master.after(10, lambda et=error_title, em=error_msg: messagebox.showerror(et, em,
+                                                                                                    master=self.master))
 
-             scan_duration = time.time() - scan_start_time
-             if not scan_error:
-                 self.log_message(f"Chart data scan completed in {scan_duration:.2f}s. Found {total_files} files.")
+            scan_duration = time.time() - scan_start_time
+            if not scan_error:
+                self.log_message(
+                    f"Chart data scan completed in {scan_duration:.2f}s. Found {total_files} files.")
 
-             # --- Schedule GUI Update (Chart Creation or Message) ---
-             def update_gui_after_chart_scan():
-                 # Check if master window still exists before proceeding
-                 if not self.master.winfo_exists(): return
-                 # If scan failed, UI state reset is handled in finally block, just return
-                 if scan_error: return
+            # --- Schedule GUI Update (Chart Creation or Message) ---
+            def update_gui_after_chart_scan():
+                # Check if master window still exists before proceeding
+                if not self.master.winfo_exists(): return
+                # If scan failed, UI state reset is handled in finally block, just return
+                if scan_error: return
 
-                 if not file_counts:
-                     # If scan succeeded but found no files
-                     no_files_msg = self._("chart_status_no_files_found", path=fs_dir_path, default=f"No files found in '{fs_dir_path}'. Cannot generate chart.")
-                     self.log_message(no_files_msg)
-                     if self.master.winfo_exists(): messagebox.showinfo(self._("chart_info_title", default="Chart Info"), no_files_msg, master=self.master)
-                     return # Don't try to create chart
+                if not file_counts:
+                    # If scan succeeded but found no files
+                    no_files_msg = self._("chart_status_no_files_found", path=fs_dir_path,
+                                            default=f"No files found in '{fs_dir_path}'. Cannot generate chart.")
+                    self.log_message(no_files_msg)
+                    if self.master.winfo_exists(): messagebox.showinfo(
+                        self._("chart_info_title", default="Chart Info"), no_files_msg, master=self.master)
+                    return  # Don't try to create chart
 
-                 # If scan succeeded and files were found, proceed to create chart
-                 self.log_message(self._("chart_status_generating", count=len(file_counts), total=total_files, default=f"Generating chart for {len(file_counts)} types ({total_files} files)..."))
-                 self._create_pie_chart_window(file_counts, fs_dir_path)
+                # If scan succeeded and files were found, proceed to create chart
+                self.log_message(self._("chart_status_generating", count=len(file_counts), total=total_files,
+                                        default=f"Generating chart for {len(file_counts)} types ({total_files} files)..."))
+                self._create_pie_chart_window(file_counts, fs_dir_path)
 
-             # Schedule the update function to run in the main GUI thread
-             if self.master.winfo_exists():
-                 self.master.after(0, update_gui_after_chart_scan)
+            # Schedule the update function to run in the main GUI thread
+            if self.master.winfo_exists():
+                self.master.after(0, update_gui_after_chart_scan)
 
         except Exception as e:
-             # Catch unexpected errors during worker setup/path calculation
-             err_msg = f"Unexpected error during chart worker setup for path '{scan_path_raw}': {e}"
-             self.log_message(err_msg)
-             self.log_message(traceback.format_exc())
-             if self.master.winfo_exists():
-                 error_title = self._("chart_error_title", default="Chart Error")
-                 self.master.after(10, lambda et=error_title, em=err_msg: messagebox.showerror(et, em, master=self.master))
+            # Catch unexpected errors during worker setup/path calculation
+            err_msg = f"Unexpected error during chart worker setup for path '{scan_path_raw}': {e}"
+            self.log_message(err_msg)
+            self.log_message(traceback.format_exc())
+            if self.master.winfo_exists():
+                error_title = self._("chart_error_title", default="Chart Error")
+                self.master.after(10, lambda et=error_title, em=err_msg: messagebox.showerror(et, em,
+                                                                                                master=self.master))
         finally:
-             # ALWAYS schedule UI state reset back to normal after worker finishes or errors out
-             if self.master.winfo_exists():
-                 self.master.after(0, self.set_ui_state, 'normal')
-
+            # ALWAYS schedule UI state reset back to normal after worker finishes or errors out
+            if self.master.winfo_exists():
+                self.master.after(0, self.set_ui_state, 'normal')
 
     def _create_pie_chart_window(self, counts, display_path):
         """ Creates and displays the file type pie chart in a new Toplevel window. """
@@ -2728,10 +2768,12 @@ class DuplicateFinderApp:
             # Double-check availability right before creation
             self.log_message("Error: Matplotlib became unavailable before chart creation.")
             if self.master.winfo_exists():
-                messagebox.showerror(self._("chart_error_title", default="Chart Error"), self._("chart_error_no_matplotlib", default="Matplotlib library not found."), master=self.master)
+                messagebox.showerror(self._("chart_error_title", default="Chart Error"),
+                                        self._("chart_error_no_matplotlib",
+                                                default="Matplotlib library not found."), master=self.master)
             return
 
-        chart_window = None # Initialize variable to hold the Toplevel window
+        chart_window = None  # Initialize variable to hold the Toplevel window
         try:
             # --- Matplotlib Settings (Attempt, ignore errors if font setting fails) ---
             try:
@@ -2739,7 +2781,8 @@ class DuplicateFinderApp:
                 matplotlib.rcParams['axes.unicode_minus'] = False
                 # Get current font list and try to prepend preferred CJK fonts
                 current_sans_serif = matplotlib.rcParams['font.sans-serif']
-                preferred_fonts = ['SimHei', 'Microsoft YaHei', 'MS Gothic', 'Malgun Gothic', 'Arial Unicode MS', 'sans-serif']
+                preferred_fonts = ['SimHei', 'Microsoft YaHei', 'MS Gothic', 'Malgun Gothic',
+                                    'Arial Unicode MS', 'sans-serif']
                 # Build final list, adding preferred only if not already present
                 final_font_list = preferred_fonts + [f for f in current_sans_serif if f not in preferred_fonts]
                 matplotlib.rcParams['font.sans-serif'] = final_font_list
@@ -2747,18 +2790,18 @@ class DuplicateFinderApp:
                 self.log_message(f"Warning: Issue setting Matplotlib rcParams (e.g., fonts): {mpl_set_err}")
 
             # --- Data Preparation for Chart ---
-            top_n = 20 # Show top N extensions + "Others"
+            top_n = 20  # Show top N extensions + "Others"
             total_count = sum(counts.values())
             # Get extensions sorted by count, descending
             sorted_counts = counts.most_common()
 
-            chart_labels = [] # Labels for wedges (extensions or "Others")
+            chart_labels = []  # Labels for wedges (extensions or "Others")
             chart_sizes = []  # Corresponding counts for wedges
-            legend_labels_with_counts = [] # Labels for the legend (e.g., ".txt (150)")
+            legend_labels_with_counts = []  # Labels for the legend (e.g., ".txt (150)")
 
             others_label = self._("chart_label_others", default="Others")
             others_count = 0
-            others_sources = [] # List of extensions grouped into "Others"
+            others_sources = []  # List of extensions grouped into "Others"
 
             # Group less frequent extensions into "Others" if necessary
             if len(sorted_counts) > top_n:
@@ -2783,20 +2826,22 @@ class DuplicateFinderApp:
 
             # Log if grouping occurred
             if others_count > 0:
-                 self.log_message(f"Chart Note: Grouped {len(others_sources)} smaller file types ({others_count} files) into '{others_label}'.")
+                self.log_message(
+                    f"Chart Note: Grouped {len(others_sources)} smaller file types ({others_count} files) into '{others_label}'.")
 
             # --- Create Chart Window (Toplevel) ---
             chart_window = Toplevel(self.master)
-            chart_window.title(self._("chart_window_title", path=display_path, default=f"File Types in {display_path}"))
-            chart_window.geometry("900x700") # Initial size
-            chart_window.minsize(600, 400) # Minimum size
+            chart_window.title(
+                self._("chart_window_title", path=display_path, default=f"File Types in {display_path}"))
+            chart_window.geometry("900x700")  # Initial size
+            chart_window.minsize(600, 400)  # Minimum size
 
             # --- Create Matplotlib Figure & Axes ---
-            fig = Figure(figsize=(9, 7), dpi=100) # Adjust figsize as needed
+            fig = Figure(figsize=(9, 7), dpi=100)  # Adjust figsize as needed
             ax = fig.add_subplot(111)
 
             # --- Generate Pie Chart ---
-            explode_value = 0.02 # Slight separation between slices
+            explode_value = 0.02  # Slight separation between slices
             # Create explode list, same length as labels
             explode_list = [explode_value] * len(chart_labels)
             # Don't explode the 'Others' slice if it exists
@@ -2804,34 +2849,37 @@ class DuplicateFinderApp:
                 try:
                     others_index = chart_labels.index(others_label)
                     explode_list[others_index] = 0
-                except ValueError: pass # Should not happen, but safe check
+                except ValueError:
+                    pass  # Should not happen, but safe check
 
             # Create the pie chart
             wedges, texts, autotexts = ax.pie(
                 chart_sizes,
                 explode=explode_list,
-                labels=None, # Use legend instead of direct labels on slices
-                autopct=lambda pct: f"{pct:.1f}%" if pct > 1.5 else '', # Show percentage only for slices > 1.5%
-                startangle=140, # Rotate start position
-                pctdistance=0.85, # Position of percentage labels inside slice
+                labels=None,  # Use legend instead of direct labels on slices
+                autopct=lambda pct: f"{pct:.1f}%" if pct > 1.5 else '',
+                # Show percentage only for slices > 1.5%
+                startangle=140,  # Rotate start position
+                pctdistance=0.85,  # Position of percentage labels inside slice
                 # Add doughnut effect and white edges for visual separation
                 wedgeprops=dict(width=0.6, edgecolor='w')
             )
-            ax.axis('equal') # Ensure pie is drawn as a circle
+            ax.axis('equal')  # Ensure pie is drawn as a circle
 
             # --- Create Legend ---
-            legend = ax.legend(wedges, legend_labels_with_counts, # Use the labels with counts
-                      title=self._("chart_legend_title", default="File Extensions"),
-                      loc="center left",
-                      bbox_to_anchor=(1, 0, 0.5, 1), # Position legend outside the plot area to the right
-                      fontsize='small', # Adjust font size
-                      frameon=True, # Add frame around legend
-                      labelspacing=0.8 # Adjust spacing between legend items
-                      )
+            legend = ax.legend(wedges, legend_labels_with_counts,  # Use the labels with counts
+                                title=self._("chart_legend_title", default="File Extensions"),
+                                loc="center left",
+                                bbox_to_anchor=(1, 0, 0.5, 1),
+                                # Position legend outside the plot area to the right
+                                fontsize='small',  # Adjust font size
+                                frameon=True,  # Add frame around legend
+                                labelspacing=0.8  # Adjust spacing between legend items
+                                )
 
             # --- Style Percentage Labels (Autotexts) ---
             for autotext in autotexts:
-                if autotext.get_text(): # Check if text exists (due to lambda autopct)
+                if autotext.get_text():  # Check if text exists (due to lambda autopct)
                     autotext.set_color('white')
                     autotext.set_fontsize(8)
                     autotext.set_weight('bold')
@@ -2839,35 +2887,37 @@ class DuplicateFinderApp:
                     autotext.set_bbox(dict(facecolor='black', alpha=0.5, pad=1, edgecolor='none'))
 
             # --- Add Chart Title ---
-            chart_title = self._("chart_window_title", path=display_path, default=f"File Types in {display_path}")
-            chart_title += f"\n(Total Files: {total_count})" # Add total file count
-            ax.set_title(chart_title, pad=20, fontsize=12) # Adjust padding and font size
+            chart_title = self._("chart_window_title", path=display_path,
+                                    default=f"File Types in {display_path}")
+            chart_title += f"\n(Total Files: {total_count})"  # Add total file count
+            ax.set_title(chart_title, pad=20, fontsize=12)  # Adjust padding and font size
 
             # --- Adjust Layout to Prevent Overlap ---
             try:
-                 # Adjust right margin to make space for the legend
-                 fig.tight_layout(rect=[0, 0, 0.75, 1])
+                # Adjust right margin to make space for the legend
+                fig.tight_layout(rect=[0, 0, 0.75, 1])
             except Exception as layout_err:
                 print(f"Warning: Chart layout adjustment failed: {layout_err}.")
                 self.log_message(f"Warning: Chart layout adjustment failed: {layout_err}")
 
             # --- Embed Matplotlib Chart in Tkinter Window ---
-            canvas = FigureCanvasTkAgg(fig, master=chart_window) # Create Tkinter canvas
-            canvas_widget = canvas.get_tk_widget() # Get the Tkinter widget from the canvas
+            canvas = FigureCanvasTkAgg(fig, master=chart_window)  # Create Tkinter canvas
+            canvas_widget = canvas.get_tk_widget()  # Get the Tkinter widget from the canvas
 
             # Add Matplotlib navigation toolbar (optional but useful)
             toolbar = NavigationToolbar2Tk(canvas, chart_window)
-            toolbar.update() # Finalize toolbar
+            toolbar.update()  # Finalize toolbar
 
             # Pack toolbar and canvas into the Toplevel window
             toolbar.pack(side=tk.BOTTOM, fill=tk.X)
             canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-            canvas.draw() # Draw the chart onto the canvas
+            canvas.draw()  # Draw the chart onto the canvas
 
             # Bring the chart window to the front
             chart_window.focus_set()
             chart_window.lift()
+
 
         except Exception as e:
             # Catch any error during chart creation/display
@@ -2875,11 +2925,22 @@ class DuplicateFinderApp:
             self.log_message(error_msg)
             self.log_message(traceback.format_exc())
             if self.master.winfo_exists():
-                messagebox.showerror(self._("chart_error_title", default="Chart Error"), error_msg, master=self.master)
-            # Destroy the Toplevel window if it was created but failed mid-process
+                # Break the messagebox call for better readability
+                messagebox.showerror(
+                    title=self._("chart_error_title", default="Chart Error"),
+                    message=error_msg,
+                    master=self.master
+                )
+            # Attempt to destroy the Toplevel window if it was created but failed mid-process
             if chart_window and chart_window.winfo_exists():
-                 try: chart_window.destroy()
-                 except: pass
+                try:
+                    chart_window.destroy()
+                except tk.TclError:  # Be slightly more specific if possible
+                    pass  # Ignore error if window is already gone
+                except Exception as destroy_e:  # Catch other potential errors during destroy
+                    print(f"Warning: Error trying to destroy chart window after creation failure: {destroy_e}")
+                    pass
+# --- End of DuplicateFinderApp Class ---
 
 
 # --- Main Execution Block ---
@@ -2895,10 +2956,10 @@ if __name__ == "__main__":
                 # Windows Vista/7
                 windll.user32.SetProcessDPIAware()
             except AttributeError:
-                # DPI awareness setting not available/needed
+                # DPI awareness setting not available/needed on this OS or version
                 pass
     except (ImportError, AttributeError):
-        # Not on Windows or ctypes issue
+        # Not on Windows or ctypes issue, DPI awareness not applicable
         pass
 
     # --- Initialize Tkinter Root Window ---
@@ -2906,30 +2967,51 @@ if __name__ == "__main__":
     try:
         # --- Basic Sanity Check for Translations ---
         # Ensure core keys exist to prevent crashing if translation file is broken
-        if not translations["en"].get("window_title") or not translations["zh"].get("window_title"):
+        if not translations["en"].get("window_title") \
+                or not translations["zh"].get("window_title"):
+
             print("ERROR: Core translations appear missing. Exiting.")
             # Attempt to show a GUI error message even if translations are broken
             try:
-                 root_err = tk.Tk(); root_err.withdraw() # Temporary hidden window
-                 messagebox.showerror("Fatal Error", "Core translation strings missing. Cannot start application.", master=root_err)
-                 root_err.destroy()
-            except: pass # Ignore errors showing the error message itself
-            sys.exit(1) # Exit cleanly
+                # Create a temporary, hidden root for the error message
+                root_err = tk.Tk()
+                root_err.withdraw()
+                messagebox.showerror(
+                    title="Fatal Error",  # Use basic English title if translations fail
+                    message="Core translation strings missing. Cannot start application.",
+                    master=root_err
+                )
+                root_err.destroy()
+            except Exception as mb_init_err:
+                # Ignore errors showing the initial error message itself
+                print(f"Could not display initial translation error in GUI: {mb_init_err}")
+            sys.exit(1)  # Exit cleanly with error code
 
         # --- Create and Run the Application ---
-        app = DuplicateFinderApp(root)
-        root.mainloop() # Start the Tkinter event loop
+        app = DuplicateFinderApp(root) # Now this should work
+        root.mainloop()  # Start the Tkinter event loop
 
     except Exception as main_e:
         # --- Catch-all for Fatal Errors during Application Initialization or Runtime ---
-        print("FATAL APPLICATION ERROR:")
-        print(traceback.format_exc()) # Print full traceback to console
+        print("\n" + "=" * 30 + " FATAL APPLICATION ERROR " + "=" * 30)
+        print(traceback.format_exc())  # Print full traceback to console
+        print("=" * 80 + "\n")
+
         # Attempt to show a final error message in a popup
         try:
-            root_err = tk.Tk(); root_err.withdraw() # Temporary hidden window
-            messagebox.showerror("Fatal Error", f"A critical error occurred and the application must close:\n\n{main_e}", master=root_err)
+            # Create a temporary, hidden root for the final error message
+            root_err = tk.Tk()
+            root_err.withdraw()
+            # Format the error message clearly
+            error_details = f"A critical error occurred and the application must close:\n\n{type(main_e).__name__}: {main_e}"
+            messagebox.showerror(
+                title="Fatal Error",
+                message=error_details,
+                master=root_err
+            )
             root_err.destroy()
         except Exception as mb_err:
-            # If even the error popup fails, log it
-            print(f"Could not display fatal error in GUI: {mb_err}")
-        sys.exit(1) # Exit with error status
+            # If even the error popup fails, log it to console
+            print(f"CRITICAL: Could not display the fatal error message in GUI: {mb_err}")
+
+        sys.exit(1)  # Exit with error status
