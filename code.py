@@ -83,6 +83,10 @@ CONFIG_FILE = resource_path("config.ini")
 LANG_PREF_FILE = resource_path("lang_pref.json")
 ICON_FILE = resource_path("app_icon.ico") # Path for icon
 
+# <<< MODIFICATION: Added default API address constant >>>
+DEFAULT_API_ADDRESS = "127.0.0.1:19798"
+# <<< END MODIFICATION >>>
+
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S" # For display format
 DEFAULT_LANG = "en"
 # Rule constants for deletion logic
@@ -100,7 +104,11 @@ translations = {
         "address_label": "API Address:",
         "account_label": "Account:",
         "password_label": "Password:",
-        "scan_path_label": "Root Path to Scan:",
+        # <<< MODIFICATION: Updated label for scan paths >>>
+        "scan_paths_label": "Root Paths to Scan:",
+        "add_path_button": "Add Path",
+        "remove_path_button": "Remove Selected",
+        # <<< END MODIFICATION >>>
         "mount_point_label": "CloudDrive Mount Point:",
         "load_config_button": "Load Config",
         "save_config_button": "Save Config",
@@ -133,20 +141,22 @@ translations = {
         "status_saving_config": "Saving config to {file}...",
         "status_config_loaded": "Config loaded.",
         "status_config_saved": "Config saved.",
-        "status_config_not_found": "Config file '{file}' not found. Using defaults/empty.",
+        "status_config_not_found": "Config file '{file}' not found. Using defaults.",
         "status_config_section_missing": "Config file loaded, but '[config]' section is missing.",
         "status_connecting": "Attempting connection...",
         "status_connect_success": "Connection successful.",
-        "status_scan_progress": "Scanned {count} items... Found {video_count} videos.",
+        "status_scan_progress": "Path '{path}': Scanned {count} items... Found {video_count} videos.",
         "status_populating_tree": "Populating list with {count} duplicate sets...",
         "status_tree_populated": "Results list populated.",
         "status_clearing_tree": "Clearing results list and rule selection...", # Updated log message
         "status_applying_rule": "Applying rule '{rule_name}' to {count} sets...",
         "status_rule_applied": "Rule applied. {delete_count} files marked for deletion.",
-        "find_starting": "Starting duplicate file scan...",
-        "find_complete_found": "Scan complete. Found {count} duplicate sets.",
-        "find_complete_none": "Scan complete. No duplicate video files found based on SHA1 hash.",
+        "find_starting": "Starting duplicate file scan across {num_paths} path(s)...",
+        "find_scan_path_start": "Scanning path: '{path}'...",
+        "find_complete_found": "Scan complete. Found {count} duplicate sets across all paths.",
+        "find_complete_none": "Scan complete. No duplicate video files found based on SHA1 hash across all paths.",
         "find_error_during": "Error during duplicate scan: {error}",
+        "find_error_processing_path": "Error processing scan path '{path}': {error}. Skipping this path.", # Added
         "delete_starting": "Starting deletion based on rule: {rule_name}...",
         "delete_finished": "Deletion complete. Attempted to delete {total_marked} files. Successfully deleted {deleted_count}.", # Clarified wording
         "delete_results_cleared": "Deletion process finished. Results list cleared, please re-scan if needed.", # Added completion message
@@ -176,15 +186,17 @@ translations = {
         "error_parse_date": "Warning: Could not parse modification date for '{path}': {error}. Skipping date comparison for this file.",
         "error_no_duplicates_found": "No duplicates were found or displayed. Cannot apply deletion rule.",
         "error_not_connected": "Error: Not connected to CloudDrive2. Please test connection first.",
-        "error_path_calc_failed": "Error: Could not determine a valid cloud scan path from Root Path and Mount Point. Check inputs.",
-        "error_input_missing": "API Address, Account, Root Path to Scan, and Mount Point are required.", # Updated required fields text
+        "error_path_calc_failed": "Error: Could not determine a valid cloud scan path from Scan Path '{scan}' and Mount Point '{mount}'. Check inputs.",
+        # <<< MODIFICATION: Updated missing input error message >>>
+        "error_input_missing": "API Address, Account, Mount Point are required. At least one Scan Path must be added.",
         "error_input_missing_conn": "API Address, Account, and Mount Point are required for connection test.",
-        "error_input_missing_chart": "Root Path to Scan and Mount Point are required to generate the chart.",
+        "error_input_missing_chart": "Mount Point is required and at least one Scan Path must be added to generate the chart.",
+        # <<< END MODIFICATION >>>
         "error_config_read": "Error reading config file: {error}",
         "error_config_save": "Could not write config file: {error}",
         "error_unexpected": "Unexpected error: {error}",
         "error_icon_load": "Error loading application icon '{path}': {error}",
-        "warning_path_mismatch": "Warning: Could not determine a valid cloud path based on 'Root Path to Scan' ('{scan}') and 'Mount Point' ('{mount}'). Effective scan path might be '/'. Please verify inputs.",
+        "warning_path_mismatch": "Warning: Could not determine a valid cloud path based on Scan Path ('{scan}') and Mount Point ('{mount}'). Effective scan path for this entry might be invalid. Please verify inputs.",
         "path_warning_title": "Path Input Warning",
         "path_warning_suspicious_chars": "Suspicious character(s) detected in input paths!\nThis often happens from copy-pasting.\nPlease DELETE and MANUALLY RETYPE the paths in the GUI.",
         "conn_test_success_title": "Connection Test Successful",
@@ -197,18 +209,20 @@ translations = {
         "chart_error_no_connection": "Cannot generate chart: Not connected to CloudDrive2.",
         "chart_error_cloud_scan": "Error scanning cloud path '{path}' for chart data: {error}",
         "chart_status_scanning_cloud": "Scanning cloud path '{path}' for file types (this may take a while)...",
-        "chart_status_generating": "Scan complete. Generating chart for {count} file types ({total} files)...",
-        "chart_status_no_files_found": "Scan complete. No files found in '{path}'. Cannot generate chart.",
-        "chart_window_title": "File Types in: {path}",
+        "chart_status_scan_paths_start": "Starting scan for chart data across {num_paths} path(s)...", # Added
+        "chart_status_scan_path_complete": "Finished scanning path '{path}'.", # Added
+        "chart_status_generating": "Scan complete across all paths. Generating chart for {count} file types ({total} files)...",
+        "chart_status_no_files_found": "Scan complete across all paths. No files found. Cannot generate chart.",
+        "chart_window_title": "File Types in Scanned Paths", # Updated
         "chart_legend_title": "File Extensions",
         "chart_label_others": "Others",
         "chart_label_no_extension": "[No Ext]",
         "tie_break_log_prefix": "Tie-Break:", # Added for rule tie-break logging
         # --- Added/Modified for Finder logging ---
         "status_test_connection_step": "Testing connection by attempting to list root directory ('/')...",
-        "status_scan_finished_duration": "Scan finished in {duration:.2f} seconds.",
-        "status_scan_summary_items": "Total items encountered: {count}. Video files processed: {video_count}.",
-        "status_scan_warnings": "WARNING: {details}.",
+        "status_scan_finished_duration": "Scan for path '{path}' finished in {duration:.2f} seconds.",
+        "status_scan_summary_items": "Path '{path}': Total items encountered: {count}. Video files processed: {video_count}.",
+        "status_scan_warnings": "Path '{path}': WARNING: {details}.",
         "warning_hash_missing": "Warning: Hash data missing in attributes for '{path}'. KeyError: {key_error}. Skipping.",
         "warning_hash_short": "Warning: Suspiciously short SHA1 hash ('{hash}') found for '{path}'. Skipping.",
         "warning_size_invalid": "Warning: Invalid size value '{size}' for {path}. Using 0.",
@@ -232,8 +246,11 @@ translations = {
         "log_debug_hash_missing_or_invalid": "[Debug] 'fileHashes' or key '2' missing or hash invalid for {path}. SHA1 is None.",
         "log_debug_skipping_no_sha1": "[Debug] SKIPPING file {filename} due to missing or invalid SHA1.",
         "log_debug_storing_info": "[Debug] Storing file info for {filename} with SHA1: {sha1}",
+        "log_debug_merging_results": "[Debug] Merging results from path '{path}'. Current total sets: {count}.",
         # --- Added for path selection ---
         "select_scan_path_dialog_title": "Select Root Directory to Scan",
+        "error_no_scan_paths_added": "Error: No scan paths have been added. Please add at least one path.", # Added
+        "scan_path_already_exists": "Path '{path}' already exists in the list.", # Added
     },
     "zh": {
         "window_title": "CloudDrive2 重复视频查找与删除工具",
@@ -241,7 +258,11 @@ translations = {
         "address_label": "API 地址:",
         "account_label": "账户:",
         "password_label": "密码:",
-        "scan_path_label": "要扫描的根路径:",
+        # <<< MODIFICATION: Updated label for scan paths >>>
+        "scan_paths_label": "要扫描的根路径:",
+        "add_path_button": "添加路径",
+        "remove_path_button": "删除选中",
+        # <<< END MODIFICATION >>>
         "mount_point_label": "CloudDrive 挂载点:",
         "load_config_button": "加载配置",
         "save_config_button": "保存配置",
@@ -274,20 +295,22 @@ translations = {
         "status_saving_config": "正在保存配置到 {file}...",
         "status_config_loaded": "配置已加载。",
         "status_config_saved": "配置已保存。",
-        "status_config_not_found": "未找到配置文件 '{file}'。将使用默认/空值。",
+        "status_config_not_found": "未找到配置文件 '{file}'。将使用默认值。",
         "status_config_section_missing": "配置文件已加载，但缺少 '[config]' 部分。",
         "status_connecting": "正在尝试连接...",
         "status_connect_success": "连接成功。",
-        "status_scan_progress": "已扫描 {count} 个项目... 找到 {video_count} 个视频。",
+        "status_scan_progress": "路径 '{path}': 已扫描 {count} 个项目... 找到 {video_count} 个视频。",
         "status_populating_tree": "正在使用 {count} 个重复集合填充列表...",
         "status_tree_populated": "结果列表已填充。",
         "status_clearing_tree": "正在清除结果列表和规则选择...", # 更新
         "status_applying_rule": "正在对 {count} 个集合应用规则 '{rule_name}'...",
         "status_rule_applied": "规则已应用。{delete_count} 个文件被标记为删除。",
-        "find_starting": "开始扫描重复文件...",
-        "find_complete_found": "扫描完成。找到 {count} 个重复集合。",
-        "find_complete_none": "扫描完成。未根据 SHA1 哈希找到重复的视频文件。",
+        "find_starting": "开始在 {num_paths} 个路径中扫描重复文件...",
+        "find_scan_path_start": "正在扫描路径: '{path}'...",
+        "find_complete_found": "扫描完成。在所有路径中共找到 {count} 个重复集合。",
+        "find_complete_none": "扫描完成。未在所有路径中根据 SHA1 哈希找到重复的视频文件。",
         "find_error_during": "扫描重复项期间出错: {error}",
+        "find_error_processing_path": "处理扫描路径 '{path}' 时出错: {error}。正在跳过此路径。", # 新增
         "delete_starting": "开始根据规则删除: {rule_name}...",
         "delete_finished": "删除完成。尝试删除 {total_marked} 个文件。成功删除了 {deleted_count} 个。", # 澄清措辞
         "delete_results_cleared": "删除过程结束。结果列表已清除，如需请重新扫描。", # 新增
@@ -317,15 +340,17 @@ translations = {
         "error_parse_date": "警告: 无法解析 '{path}' 的修改日期: {error}。将跳过此文件的日期比较。",
         "error_no_duplicates_found": "未找到或显示重复项。无法应用删除规则。",
         "error_not_connected": "错误：未连接到 CloudDrive2。请先测试连接。",
-        "error_path_calc_failed": "错误：无法根据扫描根路径和挂载点确定有效的云端扫描路径。请检查输入。",
-        "error_input_missing": "API 地址、账户、要扫描的根路径和挂载点为必填项。", # 更新文本
+        "error_path_calc_failed": "错误：无法根据扫描路径 '{scan}' 和挂载点 '{mount}' 确定有效的云端扫描路径。请检查输入。",
+        # <<< MODIFICATION: Updated missing input error message >>>
+        "error_input_missing": "API 地址、账户、挂载点为必填项。必须添加至少一个扫描路径。",
         "error_input_missing_conn": "测试连接需要 API 地址、账户和挂载点。",
-        "error_input_missing_chart": "生成图表需要“要扫描的根路径”和“挂载点”。",
+        "error_input_missing_chart": "生成图表需要挂载点，且必须添加至少一个扫描路径。",
+        # <<< END MODIFICATION >>>
         "error_config_read": "读取配置文件时出错: {error}",
         "error_config_save": "无法写入配置文件: {error}",
         "error_unexpected": "意外错误: {error}",
         "error_icon_load": "加载应用程序图标 '{path}' 时出错: {error}",
-        "warning_path_mismatch": "警告：无法根据“要扫描的根路径” ('{scan}') 和“挂载点” ('{mount}') 确定有效的云端路径。有效扫描路径可能是'/'。请核对输入。",
+        "warning_path_mismatch": "警告：无法根据扫描路径 ('{scan}') 和挂载点 ('{mount}') 确定有效的云端路径。此条目的有效扫描路径可能无效。请核对输入。",
         "path_warning_title": "路径输入警告",
         "path_warning_suspicious_chars": "在输入路径中检测到可疑字符！\n这通常是复制粘贴造成的。\n请在图形界面中删除并手动重新输入路径。",
         "conn_test_success_title": "连接测试成功",
@@ -338,18 +363,20 @@ translations = {
         "chart_error_no_connection": "无法生成图表：未连接到 CloudDrive2。",
         "chart_error_cloud_scan": "扫描云端路径 '{path}' 以获取图表数据时出错: {error}",
         "chart_status_scanning_cloud": "正在扫描云端路径 '{path}' 以获取文件类型 (可能需要一些时间)...",
-        "chart_status_generating": "扫描完成。正在为 {count} 种文件类型 ({total} 个文件) 生成图表...",
-        "chart_status_no_files_found": "扫描完成。在 '{path}' 中未找到文件。无法生成图表。",
-        "chart_window_title": "文件类型分布: {path}",
+        "chart_status_scan_paths_start": "开始在 {num_paths} 个路径中扫描图表数据...", # 新增
+        "chart_status_scan_path_complete": "完成扫描路径 '{path}'。", # 新增
+        "chart_status_generating": "所有路径扫描完成。正在为 {count} 种文件类型 ({total} 个文件) 生成图表...",
+        "chart_status_no_files_found": "所有路径扫描完成。未找到任何文件。无法生成图表。",
+        "chart_window_title": "扫描路径中的文件类型分布", # 更新
         "chart_legend_title": "文件扩展名",
         "chart_label_others": "其他",
         "chart_label_no_extension": "[无扩展名]",
         "tie_break_log_prefix": "规则冲突解决:", # 新增，用于规则冲突日志
         # --- Added/Modified for Finder logging ---
         "status_test_connection_step": "正在通过尝试列出根目录 ('/') 来测试连接...",
-        "status_scan_finished_duration": "扫描耗时 {duration:.2f} 秒完成。",
-        "status_scan_summary_items": "共遇到 {count} 个项目。已处理 {video_count} 个视频文件。",
-        "status_scan_warnings": "警告: {details}。",
+        "status_scan_finished_duration": "路径 '{path}' 的扫描耗时 {duration:.2f} 秒完成。",
+        "status_scan_summary_items": "路径 '{path}': 共遇到 {count} 个项目。已处理 {video_count} 个视频文件。",
+        "status_scan_warnings": "路径 '{path}': 警告: {details}。",
         "warning_hash_missing": "警告：'{path}' 的属性中缺少哈希数据。KeyError: {key_error}。正在跳过。",
         "warning_hash_short": "警告：为 '{path}' 找到了可疑的短 SHA1 哈希 ('{hash}')。正在跳过。",
         "warning_size_invalid": "警告：{path} 的大小值 '{size}' 无效。使用 0。",
@@ -373,8 +400,11 @@ translations = {
         "log_debug_hash_missing_or_invalid": "[调试] 路径 {path} 的 'fileHashes' 或键 '2' 缺失，或哈希无效。SHA1 为 None。",
         "log_debug_skipping_no_sha1": "[调试] 因 SHA1 缺失或无效，正在跳过文件 {filename}。",
         "log_debug_storing_info": "[调试] 正在存储文件 {filename} 的信息，SHA1 为: {sha1}",
+        "log_debug_merging_results": "[调试] 正在合并路径 '{path}' 的结果。当前总集合数: {count}。",
         # --- Added for path selection ---
         "select_scan_path_dialog_title": "选择要扫描的根目录",
+        "error_no_scan_paths_added": "错误：尚未添加扫描路径。请至少添加一个路径。", # 新增
+        "scan_path_already_exists": "路径 '{path}' 已存在于列表中。", # 新增
     }
 }
 
@@ -508,7 +538,9 @@ class DuplicateFileFinder:
         self.clouddrvie2_address = ""
         self.clouddrive2_account = ""
         self.clouddrive2_passwd = ""
-        self._raw_scan_path = ""
+        # <<< MODIFICATION: Store list of raw scan paths >>>
+        self._raw_scan_paths = []
+        # <<< END MODIFICATION >>>
         self._raw_mount_point = ""
         self.fs = None
         self.progress_callback = None
@@ -533,21 +565,24 @@ class DuplicateFileFinder:
             # Fallback to console if no callback registered
             print(str(message))
 
+    # <<< MODIFICATION: Accepts a list of raw_scan_paths >>>
     def set_config(
             self,
             clouddrvie2_address,
             clouddrive2_account,
             clouddrive2_passwd,
-            raw_scan_path, # Keep raw inputs for context
+            raw_scan_paths, # Expects a list now
             raw_mount_point,
             progress_callback=None,
     ):
+    # <<< END MODIFICATION >>>
         """ Sets configuration and attempts to establish+test connection. """
         self.clouddrvie2_address = clouddrvie2_address
         self.clouddrive2_account = clouddrive2_account
         self.clouddrive2_passwd = clouddrive2_passwd
-        # Store raw paths as provided by user
-        self._raw_scan_path = raw_scan_path
+        # <<< MODIFICATION: Store list of raw paths >>>
+        self._raw_scan_paths = list(raw_scan_paths) if raw_scan_paths else [] # Store a copy
+        # <<< END MODIFICATION >>>
         self._raw_mount_point = raw_mount_point
         self.progress_callback = progress_callback
         self.fs = None # Reset filesystem object on new config/connection attempt
@@ -600,18 +635,20 @@ class DuplicateFileFinder:
         mount_point_issues = _validate_path_chars(mount_point_raw)
         if scan_path_issues or mount_point_issues:
             all_issues = []
-            scan_path_label = self._("scan_path_label", default="Scan Path").rstrip(': ')
-            mount_point_label = self._("mount_point_label", default="Mount Point").rstrip(': ')
+            # Use generic labels as we don't have the UI context here
+            scan_path_label = "Scan Path"
+            mount_point_label = "Mount Point"
             if scan_path_issues: all_issues.append(f"'{scan_path_label}' ('{scan_path_raw}'): {', '.join(scan_path_issues)}")
             if mount_point_issues: all_issues.append(f"'{mount_point_label}' ('{mount_point_raw}'): {', '.join(mount_point_issues)}")
+            # Log as an error since it prevents calculation
             log_msg = self._("path_warning_suspicious_chars", default="Suspicious chars detected!").split('\n')[0] # Get first line
             self.log(f"ERROR: {log_msg} Details: {'; '.join(all_issues)}")
             return None # Indicate failure due to bad characters
 
         # --- Normalization ---
         # Replace backslashes, strip whitespace, remove trailing slashes
-        scan_path_norm = scan_path_raw.replace('\\', '/').strip().rstrip('/')
-        mount_point_norm = mount_point_raw.replace('\\', '/').strip().rstrip('/')
+        scan_path_norm = scan_path_raw.replace('\\', '/').strip().rstrip('/') if scan_path_raw else ''
+        mount_point_norm = mount_point_raw.replace('\\', '/').strip().rstrip('/') if mount_point_raw else ''
         fs_dir_path = None # Initialize result
 
         # --- Core Logic ---
@@ -708,220 +745,199 @@ class DuplicateFileFinder:
                         default=f"[Debug] Calculated effective cloud scan path: '{fs_dir_path}' from Scan='{scan_path_raw}', Mount='{mount_point_raw}'"))
         return fs_dir_path
 
-    # <<< START OF MODIFIED find_duplicates METHOD >>>
+    # <<< MODIFICATION: find_duplicates now iterates over multiple paths >>>
     def find_duplicates(self):
         """
-        Scans the configured cloud path for duplicate video files using SHA1 hash.
-        Handles path construction and standardizes SHA1 hash case.
+        Scans the configured cloud paths for duplicate video files using SHA1 hash.
+        Handles path construction and standardizes SHA1 hash case. Aggregates results.
         """
         if not self.fs:
             self.log(self._("error_not_connected", default="Error: Not connected to CloudDrive. Cannot scan."))
             return {}
 
-        fs_dir_path = self.calculate_fs_path(self._raw_scan_path, self._raw_mount_point)
-        if fs_dir_path is None:
-            self.log(
-                self._("error_path_calc_failed", default="Error: Could not determine cloud scan path. Aborting scan."))
+        if not self._raw_scan_paths:
+            self.log(self._("error_no_scan_paths_added", default="Error: No scan paths specified. Aborting scan."))
             return {}
 
-        self.log(self._("find_starting", default="Starting duplicate file scan...") + f" (Path: '{fs_dir_path}')")
-        start_time = time.time()
+        self.log(self._("find_starting", num_paths=len(self._raw_scan_paths), default=f"Starting duplicate file scan across {len(self._raw_scan_paths)} path(s)..."))
 
-        potential_duplicates = defaultdict(list)
-        count = 0
-        video_files_checked = 0
-        errors_getting_attrs = 0
-        files_skipped_no_sha1 = 0
-        key_errors_getting_hash = 0 # Specific counter for KeyError on hash lookup
+        # --- Aggregated results across all paths ---
+        all_potential_duplicates = defaultdict(list)
+        overall_start_time = time.time()
+        overall_items_scanned = 0
+        overall_videos_processed = 0
+        overall_attr_errors = 0
+        overall_sha1_skips = 0
 
-        try:
-            # Call walk_path WITHOUT detail=True
-            walk_iterator = self.fs.walk_path(fs_dir_path)
+        # --- Iterate through each raw scan path provided ---
+        for raw_scan_path_entry in self._raw_scan_paths:
+            fs_dir_path = self.calculate_fs_path(raw_scan_path_entry, self._raw_mount_point)
 
-            for foldername, _, filenames in walk_iterator:
-                foldername_str = str(foldername)
+            if fs_dir_path is None:
+                self.log(self._("error_path_calc_failed", scan=raw_scan_path_entry, mount=self._raw_mount_point, default=f"Error: Could not determine cloud scan path for '{raw_scan_path_entry}'. Skipping this path."))
+                continue # Skip this path and proceed to the next one
 
-                for filename_obj in filenames:
-                    count += 1
-                    raw_filepath_str = str(filename_obj)
+            self.log(self._("find_scan_path_start", path=fs_dir_path, default=f"Scanning path: '{fs_dir_path}'..."))
+            path_start_time = time.time()
+            path_count = 0
+            path_video_files_checked = 0
+            path_errors_getting_attrs = 0
+            path_files_skipped_no_sha1 = 0
+            path_key_errors_getting_hash = 0
 
-                    if not raw_filepath_str: continue
+            try:
+                walk_iterator = self.fs.walk_path(fs_dir_path)
 
-                    # --- Path Construction ---
-                    path_for_storage = "" # Initialize
-                    if raw_filepath_str.startswith('/'):
-                        path_for_storage = raw_filepath_str
-                    elif '/' in raw_filepath_str:
-                        path_for_storage = '/' + raw_filepath_str
-                    else:
-                        path_for_storage = _build_full_path(foldername_str, raw_filepath_str)
+                for foldername, _, filenames in walk_iterator:
+                    foldername_str = str(foldername)
 
-                    # --- Normalization ---
-                    while '//' in path_for_storage: path_for_storage = path_for_storage.replace('//', '/')
-                    if len(path_for_storage) > 1: path_for_storage = path_for_storage.rstrip('/')
-                    # Ensure it starts with / if not empty
-                    if path_for_storage and not path_for_storage.startswith('/'):
-                         path_for_storage = '/' + path_for_storage
+                    for filename_obj in filenames:
+                        path_count += 1
+                        overall_items_scanned += 1
+                        raw_filepath_str = str(filename_obj)
 
-                    if not path_for_storage: continue # Skip if path ended up empty
+                        if not raw_filepath_str: continue
 
+                        # Path Construction & Normalization (as before)
+                        path_for_storage = ""
+                        if raw_filepath_str.startswith('/'):
+                            path_for_storage = raw_filepath_str
+                        elif '/' in raw_filepath_str:
+                            path_for_storage = '/' + raw_filepath_str
+                        else:
+                            path_for_storage = _build_full_path(foldername_str, raw_filepath_str)
 
-                    # --- Check Video Extension ---
-                    file_extension = os.path.splitext(path_for_storage)[1].lower()
-                    if file_extension in VIDEO_EXTENSIONS:
-                        video_files_checked += 1
-                        # Uncomment the line below for verbose logging of each video file path
-                        # self.log(self._("log_debug_process_video", path=path_for_storage, default=f"[Debug] Processing Video: {path_for_storage}"))
+                        while '//' in path_for_storage: path_for_storage = path_for_storage.replace('//', '/')
+                        if len(path_for_storage) > 1: path_for_storage = path_for_storage.rstrip('/')
+                        if path_for_storage and not path_for_storage.startswith('/'):
+                             path_for_storage = '/' + path_for_storage
+                        if not path_for_storage: continue
 
-                        attrs = None
-                        mod_time_dt = None
-                        file_size = 0
-                        file_sha1_standardized = None # Use a variable for the standardized hash
+                        # Check Video Extension
+                        file_extension = os.path.splitext(path_for_storage)[1].lower()
+                        if file_extension in VIDEO_EXTENSIONS:
+                            path_video_files_checked += 1
+                            overall_videos_processed += 1
 
-                        try:
-                            # --- Get Attributes ---
-                            attrs = self.fs.attr(path_for_storage)
-                            # Uncomment the line below for verbose logging of attributes
-                            # self.log(self._("log_debug_attrs_received", filename=os.path.basename(path_for_storage), attrs=attrs, default=f"[Debug] Attrs received for {os.path.basename(path_for_storage)}: {attrs}"))
+                            attrs = None
+                            mod_time_dt = None
+                            file_size = 0
+                            file_sha1_standardized = None
 
-                            # --- Extract SHA1 Hash ---
-                            raw_sha1_value = None # Variable to hold the value as returned by the API
                             try:
-                                file_hashes_dict = attrs.get('fileHashes')
-                                if isinstance(file_hashes_dict, dict):
-                                    raw_sha1_value = file_hashes_dict.get('2')
-                                    # Uncomment the line below for verbose logging of raw hash
-                                    # self.log(self._("log_debug_raw_sha1", sha1=raw_sha1_value, default=f"[Debug] Raw SHA1 value (key '2'): {raw_sha1_value}"))
-
-                                    # Validate the raw SHA1 value
-                                    if isinstance(raw_sha1_value, str) and len(raw_sha1_value) >= 40:
-                                        # *** THE FIX: Standardize to UPPERCASE ***
-                                        file_sha1_standardized = raw_sha1_value.upper()
-                                        # Uncomment the line below for verbose logging of standardized hash
-                                        # self.log(self._("log_debug_standardized_sha1", sha1=file_sha1_standardized, default=f"[Debug] Standardized SHA1: {file_sha1_standardized}"))
+                                attrs = self.fs.attr(path_for_storage)
+                                raw_sha1_value = None
+                                try:
+                                    file_hashes_dict = attrs.get('fileHashes')
+                                    if isinstance(file_hashes_dict, dict):
+                                        raw_sha1_value = file_hashes_dict.get('2')
+                                        if isinstance(raw_sha1_value, str) and len(raw_sha1_value) >= 40:
+                                            file_sha1_standardized = raw_sha1_value.upper() # Standardize case
+                                        else:
+                                             # Log invalid SHA1 details if needed (as before)
+                                             # self.log(...)
+                                             file_sha1_standardized = None
                                     else:
-                                        # Log why it was considered invalid
-                                        if not isinstance(raw_sha1_value, str):
-                                            self.log(self._("log_debug_invalid_sha1_type", sha1=raw_sha1_value, path=path_for_storage, default=f"[Debug] Invalid SHA1: Not a string ('{raw_sha1_value}') for {path_for_storage}. Skipping."))
-                                        elif not raw_sha1_value:
-                                             self.log(self._("log_debug_invalid_sha1_empty", path=path_for_storage, default=f"[Debug] Invalid SHA1: Empty string for {path_for_storage}. Skipping."))
-                                        else: # Must be too short
-                                             self.log(self._("warning_hash_short", hash=raw_sha1_value, path=path_for_storage, default=f"[Debug] Warning: Suspiciously short SHA1 hash ('{raw_sha1_value}') for '{path_for_storage}'. Skipping."))
-                                        # Ensure standardized value is None if invalid
                                         file_sha1_standardized = None
-                                else:
-                                    # Log if 'fileHashes' or key '2' was missing
-                                    # self.log(self._("log_debug_hash_missing_or_invalid", path=path_for_storage, default=f"[Debug] 'fileHashes' or key '2' missing or hash invalid for {path_for_storage}. SHA1 is None."))
+                                except KeyError as ke:
+                                    if path_key_errors_getting_hash < 5 or path_key_errors_getting_hash % 10 == 0: # Limit logging
+                                        self.log(self._("warning_hash_missing", path=path_for_storage, key_error=ke, default=f"Warning (Path: {fs_dir_path}): Hash data missing for '{path_for_storage}'. KeyError: {ke}. Skipping."))
+                                    path_key_errors_getting_hash += 1
+                                    path_errors_getting_attrs += 1
                                     file_sha1_standardized = None
 
-                            except KeyError as ke: # Should not happen with .get()
-                                if key_errors_getting_hash < 10 or key_errors_getting_hash % 10 == 0:
-                                    self.log(self._("warning_hash_missing", path=path_for_storage, key_error=ke,
-                                                      default=f"Warning: Hash data missing for '{path_for_storage}'. KeyError: {ke}. Skipping."))
-                                key_errors_getting_hash += 1
-                                errors_getting_attrs += 1 # Count as attribute error
-                                file_sha1_standardized = None # Ensure it's None
+                                if not file_sha1_standardized:
+                                    path_files_skipped_no_sha1 += 1
+                                    overall_sha1_skips += 1
+                                    continue # Skip this file
 
+                                mod_time_str = attrs.get('modifiedTime')
+                                mod_time_dt = _parse_datetime(mod_time_str)
+                                if mod_time_dt is None and mod_time_str:
+                                    self.log(self._("error_parse_date", path=path_for_storage, error=f"Unparseable string '{mod_time_str}'", default=f"Warning: Could not parse date '{mod_time_str}' for {path_for_storage}"))
 
-                            # --- Check if standardized SHA1 is valid ---
-                            if not file_sha1_standardized:
-                                # self.log(self._("log_debug_skipping_no_sha1", filename=os.path.basename(path_for_storage), default=f"[Debug] SKIPPING file {os.path.basename(path_for_storage)} due to missing or invalid SHA1."))
-                                files_skipped_no_sha1 += 1
-                                continue # Skip this file
+                                size_val = attrs.get('size', 0)
+                                try: file_size = int(size_val) if size_val is not None else 0
+                                except (ValueError, TypeError):
+                                    self.log(self._("warning_size_invalid", size=size_val, path=path_for_storage, default=f"Warning: Invalid size value '{size_val}' for {path_for_storage}. Using 0."))
+                                    file_size = 0
 
-                            # --- If SHA1 is valid, extract other attributes and store ---
-                            # self.log(self._("log_debug_storing_info", filename=os.path.basename(path_for_storage), sha1=file_sha1_standardized, default=f"[Debug] Storing file info for {os.path.basename(path_for_storage)} with SHA1: {file_sha1_standardized}"))
+                                file_info = {
+                                    'path': path_for_storage,
+                                    'modified': mod_time_dt,
+                                    'size': file_size,
+                                    'sha1': file_sha1_standardized
+                                }
+                                # <<< MERGE into the main dictionary >>>
+                                all_potential_duplicates[file_sha1_standardized].append(file_info)
 
-                            mod_time_str = attrs.get('modifiedTime')
-                            mod_time_dt = _parse_datetime(mod_time_str)
-                            if mod_time_dt is None and mod_time_str:
-                                self.log(self._("error_parse_date", path=path_for_storage, error=f"Unparseable string '{mod_time_str}'",
-                                                default=f"Warning: Could not parse date '{mod_time_str}' for {path_for_storage}"))
+                            except FileNotFoundError as fnf_e:
+                                err_msg = self._("error_get_attrs", path=path_for_storage, error=fnf_e, default=f"Error getting attributes/hash for '{path_for_storage}': {fnf_e}")
+                                self.log(err_msg)
+                                path_errors_getting_attrs += 1
+                                overall_attr_errors += 1
+                            except Exception as e:
+                                err_msg = self._("error_get_attrs", path=path_for_storage, error=e, default=f"Error getting attributes/hash for '{path_for_storage}': {e}")
+                                self.log(err_msg)
+                                self.log(f"Attribute Error Details ({fs_dir_path}): {traceback.format_exc(limit=2)}")
+                                path_errors_getting_attrs += 1
+                                overall_attr_errors += 1
 
-                            size_val = attrs.get('size', 0)
-                            try:
-                                file_size = int(size_val) if size_val is not None else 0
-                            except (ValueError, TypeError):
-                                self.log(self._("warning_size_invalid", size=size_val, path=path_for_storage,
-                                                  default=f"Warning: Invalid size value '{size_val}' for {path_for_storage}. Using 0."))
-                                file_size = 0
+                        # Log progress periodically per path
+                        if path_count % 200 == 0:
+                            self.log(self._("status_scan_progress", path=fs_dir_path, count=path_count, video_count=path_video_files_checked, default=f"Path '{fs_dir_path}': Scanned {path_count} items... Found {path_video_files_checked} videos."))
 
-                            file_info = {
-                                'path': path_for_storage,
-                                'modified': mod_time_dt,
-                                'size': file_size,
-                                # Store the STANDARDIZED hash in the info dict as well for consistency
-                                'sha1': file_sha1_standardized
-                            }
-                            # Use the STANDARDIZED hash as the dictionary key
-                            potential_duplicates[file_sha1_standardized].append(file_info)
+                # --- Path Scan Finished ---
+                path_end_time = time.time()
+                path_duration = path_end_time - path_start_time
+                self.log(self._("status_scan_finished_duration", path=fs_dir_path, duration=path_duration, default=f"Scan for path '{fs_dir_path}' finished in {path_duration:.2f} seconds."))
+                self.log(self._("status_scan_summary_items", path=fs_dir_path, count=path_count, video_count=path_video_files_checked, default=f"Path '{fs_dir_path}': Total items encountered: {path_count}. Video files processed: {path_video_files_checked}."))
 
-                        except FileNotFoundError as fnf_e:
-                            err_msg = self._("error_get_attrs", path=path_for_storage, error=fnf_e,
-                                             default=f"Error getting attributes/hash for '{path_for_storage}': {fnf_e}")
-                            self.log(err_msg)
-                            errors_getting_attrs += 1
-                            if hasattr(fnf_e, 'args') and len(fnf_e.args) > 1:
-                                try:
-                                     detail = str(fnf_e.args[1])
-                                     if isinstance(detail, (dict, str)) and 'error: not found' in str(detail):
-                                         self.log(f"    FNF Detail: {detail}")
-                                except Exception: pass
+                # Report errors/skips for this path
+                path_warning_parts = []
+                if path_errors_getting_attrs > 0: path_warning_parts.append(f"{path_errors_getting_attrs} attribute errors")
+                if path_files_skipped_no_sha1 > 0: path_warning_parts.append(f"{path_files_skipped_no_sha1} files skipped (no/invalid SHA1)")
+                if path_warning_parts:
+                    self.log(self._("status_scan_warnings", path=fs_dir_path, details='; '.join(path_warning_parts), default=f"Path '{fs_dir_path}': WARNING: {'; '.join(path_warning_parts)}."))
 
-                        except Exception as e:
-                            err_msg = self._("error_get_attrs", path=path_for_storage, error=e,
-                                             default=f"Error getting attributes/hash for '{path_for_storage}': {e}")
-                            self.log(err_msg)
-                            self.log(f"Attribute Error Details: {traceback.format_exc(limit=2)}")
-                            errors_getting_attrs += 1
+                # Optional Debug log for merging
+                # self.log(self._("log_debug_merging_results", path=fs_dir_path, count=len(all_potential_duplicates), default=f"[Debug] Merging results from path '{fs_dir_path}'. Current total sets: {len(all_potential_duplicates)}."))
 
-                    # --- Log progress periodically ---
-                    if count % 200 == 0:
-                        self.log(self._("status_scan_progress", count=count, video_count=video_files_checked,
-                                        default=f"Scanned {count} items... Found {video_files_checked} videos."))
+            except Exception as walk_e:
+                # Catch errors during the fs.walk_path() iteration itself for this path
+                err_msg = self._("error_scan_path", path=fs_dir_path, error=walk_e, default=f"Critical error walking cloud path '{fs_dir_path}': {walk_e}")
+                self.log(err_msg)
+                self.log(f"Walk Error Details ({fs_dir_path}): {traceback.format_exc()}")
+                # Log that we are skipping this path due to the error
+                self.log(self._("find_error_processing_path", path=fs_dir_path, error=walk_e, default=f"Error processing scan path '{fs_dir_path}': {walk_e}. Skipping this path."))
+                continue # Continue to the next raw_scan_path_entry
 
+        # --- All Paths Processed ---
+        overall_end_time = time.time()
+        overall_duration = overall_end_time - overall_start_time
+        self.log(f"Completed scanning all paths in {overall_duration:.2f} seconds.")
+        # Log overall summary stats
+        self.log(f"Overall Summary: Items Scanned={overall_items_scanned}, Videos Processed={overall_videos_processed}, Attr Errors={overall_attr_errors}, SHA1 Skips={overall_sha1_skips}")
 
-            # --- Scan finished ---
-            end_time = time.time()
-            duration = end_time - start_time
-            self.log(self._("status_scan_finished_duration", duration=duration, default=f"Scan finished in {duration:.2f} seconds."))
-            self.log(self._("status_scan_summary_items", count=count, video_count=video_files_checked, default=f"Total items encountered: {count}. Video files processed: {video_files_checked}."))
+        # --- Filter Aggregated Results for Actual Duplicates ---
+        actual_duplicates = {sha1: files for sha1, files in all_potential_duplicates.items() if len(files) > 1}
 
-            # --- Report errors/skips encountered (using updated counters) ---
-            warning_parts = []
-            if errors_getting_attrs > 0: warning_parts.append(f"Encountered {errors_getting_attrs} errors retrieving attributes")
-            # Now use files_skipped_no_sha1 directly as it's incremented when SHA1 is missing/invalid
-            if files_skipped_no_sha1 > 0: warning_parts.append(f"{files_skipped_no_sha1} video files skipped due to missing/invalid SHA1")
+        # Report final findings
+        if actual_duplicates:
+             num_sets = len(actual_duplicates)
+             num_files = sum(len(files) for files in actual_duplicates.values())
+             self.log(self._("find_complete_found", count=num_sets, default=f"Scan complete. Found {num_sets} duplicate sets ({num_files} total duplicate files) across all paths."))
+        else:
+             no_dups_msg = self._("find_complete_none", default="Scan complete. No duplicate video files found based on SHA1 hash across all paths.")
+             # Add skip reason only if skips occurred overall
+             if overall_sha1_skips > 0:
+                 no_dups_msg += f" (Note: {overall_sha1_skips} video file(s) were skipped overall due to missing/invalid SHA1.)"
+             self.log(no_dups_msg)
 
-            if warning_parts:
-                self.log(self._("status_scan_warnings", details='; '.join(warning_parts), default=f"WARNING: {'; '.join(warning_parts)}."))
+        return actual_duplicates
 
-            # --- Filter for actual duplicates ---
-            # This check will now work correctly because keys are case-standardized
-            actual_duplicates = {sha1: files for sha1, files in potential_duplicates.items() if len(files) > 1}
-
-            # Report findings
-            if actual_duplicates:
-                 num_sets = len(actual_duplicates)
-                 num_files = sum(len(files) for files in actual_duplicates.values())
-                 self.log(self._("find_complete_found", count=num_sets, default=f"Scan complete. Found {num_sets} duplicate sets ({num_files} total duplicate files)."))
-            else:
-                 no_dups_msg = self._("find_complete_none", default="Scan complete. No duplicate video files found based on SHA1 hash.")
-                 # Add skip reason only if skips occurred
-                 if files_skipped_no_sha1 > 0:
-                     no_dups_msg += f" (Note: {files_skipped_no_sha1} video file(s) were skipped due to missing/invalid SHA1.)"
-                 self.log(no_dups_msg)
-
-            return actual_duplicates
-
-        except Exception as walk_e:
-            # Catch errors during the fs.walk_path() iteration itself
-            err_msg = self._("error_scan_path", path=fs_dir_path, error=walk_e,
-                             default=f"Critical error walking cloud path '{fs_dir_path}': {walk_e}")
-            self.log(err_msg)
-            self.log(f"Walk Error Details: {traceback.format_exc()}") # Log traceback for walk error
-            return {}
     # <<< END OF MODIFIED find_duplicates METHOD >>>
+
 
     def write_duplicates_report(self, duplicate_sets, output_file):
         """ Writes the dictionary of found duplicate file sets to a text file. """
@@ -1046,7 +1062,7 @@ class DuplicateFinderApp:
 
         # Tkinter variables
         self.widgets = {} # Holds widget references
-        self.string_vars = {} # Holds Entry StringVars
+        self.string_vars = {} # Holds Entry StringVars (for address, account, password, mount, suffix)
         self.entries = {} # Holds Entry widgets
         self.rule_radios = {} # Holds Radiobutton widgets specific to rules
         self.deletion_rule_var = tk.StringVar(value="") # For deletion rule radio buttons
@@ -1067,30 +1083,18 @@ class DuplicateFinderApp:
             if os.path.exists(icon_path):
                 master.iconbitmap(icon_path)
             else:
-                # Log warning if icon not found
                 print(f"Warning: Application icon file not found at '{icon_path}'")
-                # Use log_message after it's potentially initialized, or just print
-                # self.log_message(f"Warning: Application icon file not found at '{os.path.basename(icon_path)}'")
         except tk.TclError as e:
-            # Handle specific Tkinter error loading icon
-            icon_err_msg = self._("error_icon_load", path=os.path.basename(icon_path), error=e,
-                                  default=f"Error loading icon '{os.path.basename(icon_path)}': {e}")
+            icon_err_msg = self._("error_icon_load", path=os.path.basename(icon_path), error=e, default=f"Error loading icon '{os.path.basename(icon_path)}': {e}")
             print(icon_err_msg)
-            # self.log_message(icon_err_msg) # log_message might not be ready yet
         except Exception as e:
-            # Catch any other unexpected error during icon loading
-            icon_err_msg = self._("error_icon_load", path=os.path.basename(icon_path), error=f"Unexpected error: {e}",
-                                  default=f"Unexpected error loading icon '{os.path.basename(icon_path)}': {e}")
+            icon_err_msg = self._("error_icon_load", path=os.path.basename(icon_path), error=f"Unexpected error: {e}", default=f"Unexpected error loading icon '{os.path.basename(icon_path)}': {e}")
             print(icon_err_msg)
-            # self.log_message(icon_err_msg) # log_message might not be ready yet
 
         # --- Menu Bar ---
         self.menu_bar = Menu(master)
         master.config(menu=self.menu_bar)
         self.create_menus() # Populate the menu bar
-
-        # --- Create Main Layout Structure (Using grid instead of PanedWindow) ---
-        # REMOVED PanedWindow initialization and packing
 
         # --- Build the UI Sections using master.grid ---
         self._build_ui_structure()
@@ -1103,50 +1107,33 @@ class DuplicateFinderApp:
 
     def _build_ui_structure(self):
         """Creates and grids all the UI widgets directly into the main window (master)."""
-
-        # --- Get master reference for clarity ---
         master = self.master
-
-        # --- Style Configuration ---
         style = ttk.Style()
         try:
-            # Configure a style for the delete button (bold red text)
             style.configure("Danger.TButton", foreground="red", font=('TkDefaultFont', 10, 'bold'))
         except tk.TclError:
-             style.configure("Danger.TButton", foreground="red") # Fallback if font spec fails
+             style.configure("Danger.TButton", foreground="red") # Fallback
 
-        # --- Configure the main window's grid ---
-        master.columnconfigure(0, weight=1) # Main content column expands horizontally
-        # Define rows and their weights
-        # Row 0: Config Frame
-        # Row 1: Action Buttons Frame
-        # Row 2: Rules Frame
-        # Row 3: Results TreeView Frame (EXPAND)
-        # Row 4: Final Action Buttons Frame
-        # Row 5: Log Frame (EXPAND)
+        master.columnconfigure(0, weight=1)
         master.rowconfigure(3, weight=1) # Treeview row expands vertically
-        master.rowconfigure(5, weight=1) # Log row expands vertically (Reduced weight slightly)
-
+        master.rowconfigure(5, weight=1) # Log row expands vertically
 
         # --- 1. Configuration Section ---
         config_frame = ttk.LabelFrame(master, text=self._("config_title"), padding=(10, 5))
-        # Place in master grid, row 0
-        config_frame.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="ew") # Top padding
-        config_frame.columnconfigure(1, weight=1) # Entries expand horizontally
-        # >>> ADDED: Add columnconfigure for the browse button (column 2), no weight
-        config_frame.columnconfigure(2, weight=0)
+        config_frame.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="ew")
+        config_frame.columnconfigure(1, weight=1) # Entries/Listbox expand horizontally
+        config_frame.columnconfigure(2, weight=0) # Buttons don't expand
         self.widgets["config_frame"] = config_frame
 
-        # Define config fields: (internal_key, label_translation_key, grid_row)
-        config_fields = [
-            ("address", "address_label", 0),
-            ("account", "account_label", 1),
-            ("password", "password_label", 2),
-            ("scan_path", "scan_path_label", 3), # This is the row we modify
-            ("mount_point", "mount_point_label", 4),
+        # Define simple config fields: (internal_key, label_translation_key, grid_row, is_password)
+        simple_config_fields = [
+            ("address", "address_label", 0, False),
+            ("account", "account_label", 1, False),
+            ("password", "password_label", 2, True),
+            ("mount_point", "mount_point_label", 4, False), # Mount point below scan paths now
         ]
 
-        for key, label_key, row in config_fields:
+        for key, label_key, row, is_password in simple_config_fields:
             label = ttk.Label(config_frame, text=self._(label_key))
             label.grid(row=row, column=0, padx=(5, 2), pady=3, sticky=tk.W)
             self.widgets[f"label_{key}"] = label
@@ -1154,27 +1141,54 @@ class DuplicateFinderApp:
             var = tk.StringVar()
             self.string_vars[key] = var
             entry_args = {"textvariable": var}
-            if key == "password":
+            if is_password:
                 entry_args["show"] = "*"
             entry = ttk.Entry(config_frame, **entry_args)
-            # >>> MODIFIED: Grid the entry in column 1, sticky EW
-            entry.grid(row=row, column=1, padx=(2, 5), pady=3, sticky=tk.EW)
+            # Make entry span potentially 2 columns if buttons are in col 2
+            entry.grid(row=row, column=1, columnspan=2, padx=(2, 5), pady=3, sticky=tk.EW)
             self.entries[key] = entry
 
-            # <<< START MODIFICATION: Add Browse button for scan_path >>>
-            if key == "scan_path":
-                browse_button = ttk.Button(config_frame, text="...",
-                                           command=self.select_scan_path, # New callback method
-                                           width=3) # Make the button small
-                # Grid the button in column 2
-                browse_button.grid(row=row, column=2, padx=(0, 5), pady=3, sticky=tk.W)
-                self.widgets["select_scan_path_button"] = browse_button
-            # <<< END MODIFICATION >>>
+        # <<< MODIFICATION: Scan Paths Listbox and Buttons >>>
+        scan_path_row = 3
+        # Label for scan paths
+        scan_path_label = ttk.Label(config_frame, text=self._("scan_paths_label"))
+        scan_path_label.grid(row=scan_path_row, column=0, padx=(5, 2), pady=(10, 2), sticky=tk.NW) # Align top-west
+        self.widgets["label_scan_paths"] = scan_path_label
 
+        # Frame to hold listbox and its scrollbar
+        listbox_frame = ttk.Frame(config_frame)
+        listbox_frame.grid(row=scan_path_row, column=1, padx=(2, 2), pady=(10, 2), sticky=tk.NSEW)
+        listbox_frame.rowconfigure(0, weight=1)
+        listbox_frame.columnconfigure(0, weight=1)
+        config_frame.rowconfigure(scan_path_row, weight=1) # Allow listbox row to expand slightly if needed
+
+        # Listbox for Scan Paths
+        scan_path_listbox = tk.Listbox(listbox_frame, height=4, selectmode=tk.EXTENDED, exportselection=False) # Allow multiple selections for removal
+        scan_path_listbox.grid(row=0, column=0, sticky=tk.NSEW)
+        self.widgets["scan_path_listbox"] = scan_path_listbox
+
+        # Scrollbar for Listbox
+        listbox_scrollbar = ttk.Scrollbar(listbox_frame, orient=tk.VERTICAL, command=scan_path_listbox.yview)
+        listbox_scrollbar.grid(row=0, column=1, sticky=tk.NS)
+        scan_path_listbox.configure(yscrollcommand=listbox_scrollbar.set)
+
+        # Frame for Add/Remove buttons next to listbox
+        scan_path_buttons_frame = ttk.Frame(config_frame)
+        scan_path_buttons_frame.grid(row=scan_path_row, column=2, padx=(2, 5), pady=(10, 2), sticky=tk.NS)
+
+        # Add Path Button
+        add_path_button = ttk.Button(scan_path_buttons_frame, text=self._("add_path_button"), command=self.add_scan_path)
+        add_path_button.pack(side=tk.TOP, pady=(0, 5), fill=tk.X)
+        self.widgets["add_scan_path_button"] = add_path_button
+
+        # Remove Path Button
+        remove_path_button = ttk.Button(scan_path_buttons_frame, text=self._("remove_path_button"), command=self.remove_selected_scan_paths)
+        remove_path_button.pack(side=tk.TOP, fill=tk.X)
+        self.widgets["remove_scan_path_button"] = remove_path_button
+        # <<< END MODIFICATION >>>
 
         # --- 2. Action Buttons Frame (Load, Save, Test, Find) ---
         action_button_frame = ttk.Frame(master, padding=(5, 0))
-        # Place in master grid, row 1
         action_button_frame.grid(row=1, column=0, padx=10, pady=(0, 5), sticky="ew")
         btn_frame_inner = ttk.Frame(action_button_frame)
         btn_frame_inner.pack(side=tk.LEFT) # Keep buttons left-aligned
@@ -1193,7 +1207,6 @@ class DuplicateFinderApp:
 
         # --- 3. Deletion Rules Section ---
         rules_frame = ttk.LabelFrame(master, text=self._("rules_title"), padding=(10, 5))
-        # Place in master grid, row 2
         rules_frame.grid(row=2, column=0, padx=10, pady=(5, 5), sticky="ew")
         rules_frame.columnconfigure(2, weight=1) # Allow suffix entry to expand
         self.widgets["rules_frame"] = rules_frame
@@ -1229,7 +1242,6 @@ class DuplicateFinderApp:
 
         # --- 4. Results TreeView Section ---
         tree_frame = ttk.Frame(master) # Parent is master
-        # Place in master grid, row 3 - THIS ROW EXPANDS
         tree_frame.grid(row=3, column=0, padx=10, pady=(5, 5), sticky="nsew") # Fill expanding area
         tree_frame.rowconfigure(0, weight=1) # Treeview expands vertically within frame
         tree_frame.columnconfigure(0, weight=1) # Treeview expands horizontally within frame
@@ -1259,15 +1271,14 @@ class DuplicateFinderApp:
 
         # --- 5. Final Action Buttons Frame (Delete, Chart, Save Report) ---
         final_action_frame = ttk.Frame(master) # Parent is master
-        # Place in master grid, row 4
         final_action_frame.grid(row=4, column=0, padx=10, pady=(5, 0), sticky="ew")
         final_btn_inner_frame = ttk.Frame(final_action_frame)
         final_btn_inner_frame.pack(side=tk.LEFT) # Keep buttons left-aligned
 
         final_buttons_info = [
              ("delete", "delete_by_rule_button", self.start_delete_by_rule_thread, tk.DISABLED, "Danger.TButton"),
-             ("chart", "show_chart_button", self.show_cloud_file_types, tk.DISABLED, ""), # Correctly references the method now
-             ("save_list", "save_list_button", self.save_duplicates_report, tk.DISABLED, ""), # Correctly references the method now
+             ("chart", "show_chart_button", self.show_cloud_file_types, tk.DISABLED, ""),
+             ("save_list", "save_list_button", self.save_duplicates_report, tk.DISABLED, ""),
         ]
 
         for idx, (w_key, t_key, cmd, initial_state, style_name) in enumerate(final_buttons_info):
@@ -1286,13 +1297,12 @@ class DuplicateFinderApp:
 
         # --- 6. Log Output Area Section ---
         log_frame = ttk.LabelFrame(master, text=self._("log_title"), padding=(5, 5)) # Parent is master
-        # Place in master grid, row 5 - THIS ROW EXPANDS
         log_frame.grid(row=5, column=0, padx=10, pady=(0, 10), sticky="nsew") # Bottom padding
         log_frame.rowconfigure(0, weight=1) # Text area expands vertically within frame
         log_frame.columnconfigure(0, weight=1) # Text area expands horizontally within frame
         self.widgets["log_frame"] = log_frame
 
-        self.log_text = scrolledtext.ScrolledText(log_frame, wrap=tk.WORD, height=10, # Initial height is less critical now
+        self.log_text = scrolledtext.ScrolledText(log_frame, wrap=tk.WORD, height=10,
                                                   state='disabled', relief=tk.SOLID, borderwidth=1,
                                                   font=("TkDefaultFont", 9))
         self.log_text.grid(row=0, column=0, sticky="nsew") # Fills log_frame
@@ -1305,7 +1315,6 @@ class DuplicateFinderApp:
         default_val = kwargs.pop('default', f"<{key}?>") # Default fallback
         base_string = lang_dict.get(key, translations[DEFAULT_LANG].get(key, default_val))
         try:
-            # Format only if needed and possible
             if '{' in base_string and '}' in base_string and kwargs:
                  return base_string.format(**kwargs)
             else:
@@ -1325,7 +1334,6 @@ class DuplicateFinderApp:
                 json.dump({"language": self.current_language}, f, indent=2)
         except IOError as e:
             print(f"Warning: Could not save language preference to {os.path.basename(pref_path)}: {e}")
-            # Use self.log_message only if it's safe (e.g., GUI is likely up)
             if hasattr(self, 'log_message'): self.log_message(f"Warning: Could not save language preference: {e}")
         except Exception as e:
              print(f"Error saving language preference: {e}")
@@ -1365,11 +1373,10 @@ class DuplicateFinderApp:
         if lang_code in translations and lang_code != self.current_language:
             print(f"Changing language to: {lang_code}")
             self.current_language = lang_code
-            # IMPORTANT: Update the finder's translator
             self.finder.set_translator(self._)
             self.update_ui_language()
             self.save_language_preference()
-            self.log_message(f"Language changed to '{lang_code}'.") # This log will use the new language
+            self.log_message(f"Language changed to '{lang_code}'.")
         elif lang_code == self.current_language:
             self.log_message(f"Language is already set to '{lang_code}'.")
         elif lang_code not in translations:
@@ -1384,13 +1391,11 @@ class DuplicateFinderApp:
              return
 
         try:
-            # Window Title
             self.master.title(self._("window_title"))
 
             # Menu Bar
             if self.menu_bar and self.menu_bar.winfo_exists():
-                try:
-                    self.menu_bar.entryconfig(0, label=self._("menu_language"))
+                try: self.menu_bar.entryconfig(0, label=self._("menu_language"))
                 except (tk.TclError, IndexError): pass
                 lang_menu = self.widgets.get("lang_menu")
                 if lang_menu and lang_menu.winfo_exists():
@@ -1411,7 +1416,10 @@ class DuplicateFinderApp:
             # Labels
             label_keys = {
                 "label_address": "address_label", "label_account": "account_label",
-                "label_password": "password_label", "label_scan_path": "scan_path_label",
+                "label_password": "password_label",
+                # <<< MODIFICATION: Use new label key >>>
+                "label_scan_paths": "scan_paths_label",
+                # <<< END MODIFICATION >>>
                 "label_mount_point": "mount_point_label",
                 "suffix_label": "rule_suffix_entry_label"
             }
@@ -1428,7 +1436,10 @@ class DuplicateFinderApp:
                 "find_button": "find_button",
                 "delete_button": "delete_by_rule_button",
                 "save_list_button": "save_list_button",
-                # Note: select_scan_path_button text is fixed as "..."
+                # <<< MODIFICATION: Add new button keys >>>
+                "add_scan_path_button": "add_path_button",
+                "remove_scan_path_button": "remove_path_button",
+                # <<< END MODIFICATION >>>
             }
             for widget_key, text_key in button_keys.items():
                 widget = self.widgets.get(widget_key)
@@ -1451,7 +1462,6 @@ class DuplicateFinderApp:
                 RULE_KEEP_SUFFIX: "rule_keep_suffix"
             }
             for value, text_key in radio_keys.items():
-                # Use the stored radio widgets directly
                 widget = self.rule_radios.get(value)
                 if widget and widget.winfo_exists():
                     try: widget.config(text=self._(text_key))
@@ -1460,11 +1470,10 @@ class DuplicateFinderApp:
             # Treeview Headings
             self.setup_treeview_headings()
 
-            # Re-apply rule highlighting if data exists (updates Keep/Delete text)
+            # Re-apply rule highlighting if data exists
             tree = self.widgets.get("treeview")
-            # Add check for rule selection before reapplying
             if self.duplicate_sets and self.deletion_rule_var.get() and tree and tree.winfo_exists():
-                self._apply_rule_to_treeview(log_update=False) # Avoid redundant logging during language switch
+                self._apply_rule_to_treeview(log_update=False)
 
             print(f"UI Language update to {self.current_language} complete.")
 
@@ -1491,16 +1500,12 @@ class DuplicateFinderApp:
                 if col_id in heading_keys:
                     text_key = heading_keys[col_id]
                     heading_text = self._(text_key, default=col_id.replace('_',' ').title())
-
                     sort_indicator = ""
                     if col_id == self._last_sort_col:
                         sort_indicator = ' ▲' if self._sort_ascending else ' ▼'
-
-                    # Align headers left for consistency, except size/set#
                     anchor = tk.W
                     if col_id in ["size_mb", "set_id", "action"]:
                         anchor = tk.CENTER if col_id != "size_mb" else tk.E
-
                     tree.heading(col_id, text=heading_text + sort_indicator, anchor=anchor,
                                  command=lambda c=col_id: self._treeview_sort_column(c))
         except tk.TclError:
@@ -1526,24 +1531,17 @@ class DuplicateFinderApp:
 
         # Prepare Data for Sorting
         items_to_sort = []
-        # Handle potential comparison issues between timezone-aware and naive datetimes safely
-        now_aware = datetime.now(timezone.utc) # Use a fixed reference point
+        now_aware = datetime.now(timezone.utc)
         min_datetime_sort = datetime.min.replace(tzinfo=timezone.utc)
-        max_datetime_sort = datetime.max.replace(tzinfo=timezone.utc) - timedelta(seconds=1) # Avoid exact max
+        max_datetime_sort = datetime.max.replace(tzinfo=timezone.utc) - timedelta(seconds=1)
 
         def get_sortable_datetime(dt_obj):
-            """ Helper to make datetimes sortable, handling None and naive vs aware """
             if isinstance(dt_obj, datetime):
                 if dt_obj.tzinfo is None or dt_obj.tzinfo.utcoffset(dt_obj) is None:
-                     # Option 1: Treat naive as UTC (simplest if consistency is assumed)
-                     # return dt_obj.replace(tzinfo=timezone.utc)
-                     # Option 2: Treat naive as incomparable (use min/max) - safer if mix exists
                      return min_datetime_sort if self._sort_ascending else max_datetime_sort
                 else:
-                    # Already aware
                     return dt_obj
             else:
-                # Not a datetime object (or None)
                 return min_datetime_sort if self._sort_ascending else max_datetime_sort
 
         for item_id in tree.get_children(''):
@@ -1556,22 +1554,18 @@ class DuplicateFinderApp:
                     elif col == 'modified':
                         sort_value = get_sortable_datetime(file_info.get('modified'))
                     elif col == 'size_mb':
-                        # Sort by actual byte size for accuracy, not formatted MB string
                         sort_value = file_info.get('size', 0) if file_info.get('size') is not None else 0
                     elif col == 'set_id':
                         current_val_str = tree.set(item_id, col)
                         match = re.search(r'\d+', current_val_str)
                         sort_value = int(match.group(0)) if match else 0
                     elif col == 'action':
-                        sort_value = tree.set(item_id, col).lower() # Sort by "Keep" / "Delete" text
-                    else: # Fallback? Should not happen with defined columns
                         sort_value = tree.set(item_id, col).lower()
-
+                    else:
+                        sort_value = tree.set(item_id, col).lower()
                     items_to_sort.append((sort_value, item_id))
-
                 except Exception as e:
                     print(f"Error getting sort value for item {item_id}, col {col}: {e}")
-                    # Provide default sort value based on column type for robustness
                     default_sort_val = 0
                     if col == 'modified': default_sort_val = min_datetime_sort if self._sort_ascending else max_datetime_sort
                     elif col in ['path', 'action']: default_sort_val = "" if self._sort_ascending else "~"
@@ -1581,10 +1575,8 @@ class DuplicateFinderApp:
         try:
             items_to_sort.sort(key=lambda x: x[0], reverse=not self._sort_ascending)
         except TypeError as te:
-            # This might still happen if get_sortable_datetime logic changes or unforeseen types exist
             self.log_message(f"Error: Could not sort column '{col}'. Inconsistent data types found. ({te})")
             print(f"Sorting TypeError for column {col}: {te}")
-            # Attempt fallback sort by string representation
             try:
                 print(f"Attempting fallback string sort for column {col}")
                 items_to_sort.sort(key=lambda x: str(x[0]), reverse=not self._sort_ascending)
@@ -1597,12 +1589,11 @@ class DuplicateFinderApp:
         # Reorder Items in the Treeview
         for i, (_, item_id) in enumerate(items_to_sort):
             try:
-                if tree.exists(item_id): # Check existence before moving
+                if tree.exists(item_id):
                     tree.move(item_id, '', i)
             except tk.TclError as e:
                 print(f"Error moving tree item {item_id}: {e}")
 
-        # Update Heading Visuals
         self.setup_treeview_headings()
 
 
@@ -1611,20 +1602,15 @@ class DuplicateFinderApp:
         """ Safely appends a timestamped message to the log ScrolledText widget from any thread. """
         message_str = str(message) if message is not None else ""
         log_widget = self.widgets.get("log_text")
-
         if hasattr(self, 'master') and self.master and self.master.winfo_exists() and \
            log_widget and log_widget.winfo_exists():
             try:
-                # Use `after` to ensure thread safety for Tkinter updates
                 self.master.after(0, self._append_log, message_str)
             except (tk.TclError, RuntimeError) as e:
-                 # Handle cases where the window might be destroyed between check and call
                  print(f"Log Error (Tcl/Runtime): {e} - Message: {message_str}")
             except Exception as e:
-                 # Catch other potential errors during scheduling
                  print(f"Error scheduling log message: {e}\nMessage: {message_str}")
         else:
-             # Fallback if GUI elements are not available (e.g., during shutdown)
              timestamp = datetime.now().strftime("%H:%M:%S")
              print(f"[LOG FALLBACK - {timestamp}] {message_str}")
 
@@ -1633,9 +1619,7 @@ class DuplicateFinderApp:
         log_widget = self.widgets.get("log_text")
         if not log_widget or not log_widget.winfo_exists():
             return # Widget gone
-
         try:
-            # Temporarily enable, insert text, scroll, disable again
             current_state = log_widget.cget('state')
             log_widget.configure(state='normal')
             timestamp = datetime.now().strftime("%H:%M:%S")
@@ -1643,14 +1627,11 @@ class DuplicateFinderApp:
             log_widget.see(tk.END) # Scroll to the end
             log_widget.configure(state=current_state) # Restore previous state
         except tk.TclError as e:
-            # Catch errors if the widget is destroyed mid-operation
             print(f"Log Append TclError: {e} - Message: {message}")
         except Exception as e:
             print(f"Unexpected error appending log: {e}\nMessage: {message}")
-            # Try to restore state even on unexpected error
             try:
-                if log_widget and log_widget.winfo_exists():
-                    log_widget.configure(state=current_state)
+                if log_widget and log_widget.winfo_exists(): log_widget.configure(state=current_state)
             except: pass
 
     def load_config(self):
@@ -1658,13 +1639,23 @@ class DuplicateFinderApp:
         config_path = CONFIG_FILE
         self.log_message(self._("status_loading_config", file=os.path.basename(config_path), default=f"Loading config from {os.path.basename(config_path)}..."))
         config = configparser.ConfigParser()
+
+        # <<< MODIFICATION: Set default API address BEFORE reading config >>>
+        self.string_vars["address"].set(DEFAULT_API_ADDRESS)
+        # <<< END MODIFICATION >>>
+
+        # Clear other fields and listbox before loading
+        for key in ["account", "password", "mount_point"]:
+            if key in self.string_vars: self.string_vars[key].set("")
+        scan_listbox = self.widgets.get("scan_path_listbox")
+        if scan_listbox and scan_listbox.winfo_exists():
+            try: scan_listbox.delete(0, tk.END)
+            except tk.TclError: pass
+
         try:
             if not os.path.exists(config_path):
-                 self.log_message(self._("status_config_not_found", file=os.path.basename(config_path), default=f"Config file '{os.path.basename(config_path)}' not found."))
-                 # Clear fields if config not found
-                 for key in ["address", "account", "password", "scan_path", "mount_point"]:
-                     if key in self.string_vars: self.string_vars[key].set("")
-                 return
+                 self.log_message(self._("status_config_not_found", file=os.path.basename(config_path), default=f"Config file '{os.path.basename(config_path)}' not found. Using defaults."))
+                 return # Keep the defaults set above
 
             read_files = config.read(config_path, encoding='utf-8')
             if not read_files:
@@ -1673,25 +1664,31 @@ class DuplicateFinderApp:
 
             if 'config' in config:
                 cfg_section = config['config']
-                # Load using original keys for compatibility
-                self.string_vars["address"].set(cfg_section.get("clouddrvie2_address", ""))
+                # Load simple fields, using default for API Address if key missing
+                self.string_vars["address"].set(cfg_section.get("clouddrvie2_address", DEFAULT_API_ADDRESS))
                 self.string_vars["account"].set(cfg_section.get("clouddrive2_account", ""))
                 self.string_vars["password"].set(cfg_section.get("clouddrive2_passwd", ""))
-                self.string_vars["scan_path"].set(cfg_section.get("root_path", ""))
                 self.string_vars["mount_point"].set(cfg_section.get("clouddrive2_root_path", ""))
+
+                # <<< MODIFICATION: Load scan paths from potentially multi-line string >>>
+                root_path_str = cfg_section.get("root_path", "")
+                if root_path_str and scan_listbox and scan_listbox.winfo_exists():
+                    paths = [p.strip() for p in root_path_str.split('\n') if p.strip()]
+                    for path in paths:
+                        scan_listbox.insert(tk.END, path)
+                # <<< END MODIFICATION >>>
+
                 self.log_message(self._("status_config_loaded", default="Config loaded successfully."))
             else:
                 self.log_message(self._("status_config_section_missing", default="Config file loaded, but '[config]' section is missing."))
 
         except configparser.Error as e:
             error_msg = self._("error_config_read", error=e, default=f"Error reading config file: {e}")
-            if self.master.winfo_exists():
-                 messagebox.showerror(self._("error_config_title", default="Config Error"), error_msg, master=self.master)
+            if self.master.winfo_exists(): messagebox.showerror(self._("error_config_title", default="Config Error"), error_msg, master=self.master)
             self.log_message(error_msg)
         except Exception as e:
              error_msg = self._("error_unexpected", error=f"loading config: {e}", default=f"Unexpected error loading config: {e}")
-             if self.master.winfo_exists():
-                 messagebox.showerror(self._("error_title", default="Error"), error_msg, master=self.master)
+             if self.master.winfo_exists(): messagebox.showerror(self._("error_title", default="Error"), error_msg, master=self.master)
              self.log_message(error_msg)
              self.log_message(traceback.format_exc())
 
@@ -1702,12 +1699,22 @@ class DuplicateFinderApp:
         self.log_message(self._("status_saving_config", file=os.path.basename(config_path), default=f"Saving config to {os.path.basename(config_path)}..."))
         config = configparser.ConfigParser()
 
-        # Prepare data using INI keys
+        # <<< MODIFICATION: Get scan paths from Listbox >>>
+        scan_paths = []
+        scan_listbox = self.widgets.get("scan_path_listbox")
+        if scan_listbox and scan_listbox.winfo_exists():
+            scan_paths = list(scan_listbox.get(0, tk.END))
+        # Join paths with newline for storage in INI
+        root_path_value = "\n".join(p.strip() for p in scan_paths if p.strip())
+        # <<< END MODIFICATION >>>
+
         config_data = {
             "clouddrvie2_address": self.string_vars["address"].get(),
             "clouddrive2_account": self.string_vars["account"].get(),
             "clouddrive2_passwd": self.string_vars["password"].get(),
-            "root_path": self.string_vars["scan_path"].get(),
+            # <<< MODIFICATION: Save joined scan paths >>>
+            "root_path": root_path_value,
+            # <<< END MODIFICATION >>>
             "clouddrive2_root_path": self.string_vars["mount_point"].get(),
         }
         config['config'] = config_data
@@ -1716,8 +1723,6 @@ class DuplicateFinderApp:
         try:
             if os.path.exists(config_path):
                  config_old = configparser.ConfigParser()
-                 # Read existing config to preserve other sections
-                 # Use read_file to avoid clearing existing config object if file doesn't exist
                  with open(config_path, 'r', encoding='utf-8') as f_old:
                      config_old.read_file(f_old)
                  for section in config_old.sections():
@@ -1736,37 +1741,60 @@ class DuplicateFinderApp:
             self.log_message(self._("status_config_saved", default="Config saved successfully."))
         except IOError as e:
             error_msg = self._("error_config_save", error=e, default=f"Could not write config file: {e}")
-            if self.master.winfo_exists():
-                 messagebox.showerror(self._("error_config_save_title", default="Config Save Error"), error_msg, master=self.master)
+            if self.master.winfo_exists(): messagebox.showerror(self._("error_config_save_title", default="Config Save Error"), error_msg, master=self.master)
             self.log_message(error_msg)
         except Exception as e:
              error_msg = self._("error_unexpected", error=f"saving config: {e}", default=f"Unexpected error saving config: {e}")
-             if self.master.winfo_exists():
-                 messagebox.showerror(self._("error_title", default="Error"), error_msg, master=self.master)
+             if self.master.winfo_exists(): messagebox.showerror(self._("error_title", default="Error"), error_msg, master=self.master)
              self.log_message(error_msg)
              self.log_message(traceback.format_exc())
 
-    # <<< NEW METHOD >>>
-    def select_scan_path(self):
-        """Opens a directory selection dialog and updates the scan path entry."""
+    # <<< NEW METHOD: Add scan path to listbox >>>
+    def add_scan_path(self):
+        """Opens a directory selection dialog and adds the selected path to the listbox."""
         dialog_title = self._("select_scan_path_dialog_title", default="Select Root Scan Directory")
-        # Ask the user to select a directory
-        selected_directory = filedialog.askdirectory(
-            title=dialog_title,
-            parent=self.master # Make dialog modal to the main window
-        )
+        selected_directory = filedialog.askdirectory(title=dialog_title, parent=self.master)
 
-        # If a directory was selected (user didn't cancel)
         if selected_directory:
-            # Update the StringVar, which updates the Entry widget automatically
-            self.string_vars["scan_path"].set(selected_directory)
-            self.log_message(f"Scan path set to: {selected_directory}")
+            scan_listbox = self.widgets.get("scan_path_listbox")
+            if scan_listbox and scan_listbox.winfo_exists():
+                # Check if path already exists
+                current_paths = list(scan_listbox.get(0, tk.END))
+                normalized_new_path = os.path.normpath(selected_directory)
+                normalized_existing = [os.path.normpath(p) for p in current_paths]
+
+                if normalized_new_path in normalized_existing:
+                    self.log_message(self._("scan_path_already_exists", path=selected_directory, default=f"Path '{selected_directory}' already exists."))
+                    if self.master.winfo_exists(): messagebox.showwarning("Path Exists", self._("scan_path_already_exists", path=selected_directory), parent=self.master)
+                else:
+                    scan_listbox.insert(tk.END, selected_directory)
+                    self.log_message(f"Added scan path: {selected_directory}")
+                    scan_listbox.see(tk.END) # Scroll to the newly added item
     # <<< END NEW METHOD >>>
 
-    def _check_path_chars(self, path_dict):
+    # <<< NEW METHOD: Remove selected scan paths from listbox >>>
+    def remove_selected_scan_paths(self):
+        """Removes the selected path(s) from the scan path listbox."""
+        scan_listbox = self.widgets.get("scan_path_listbox")
+        if scan_listbox and scan_listbox.winfo_exists():
+            selected_indices = scan_listbox.curselection()
+            if not selected_indices:
+                self.log_message("No scan paths selected to remove.")
+                return
+
+            # Remove items in reverse order to avoid index issues
+            for i in reversed(selected_indices):
+                removed_path = scan_listbox.get(i)
+                scan_listbox.delete(i)
+                self.log_message(f"Removed scan path: {removed_path}")
+    # <<< END NEW METHOD >>>
+
+    # <<< MODIFICATION: Check paths from listbox >>>
+    def _check_path_chars(self, path_dict, check_scan_paths_from_listbox=False):
         """
         Validates characters in specified path inputs using _validate_path_chars helper.
         Logs details and shows a warning popup if suspicious characters are found.
+        Optionally checks paths from the scan path listbox.
         Returns True if all paths are valid, False otherwise.
         """
         suspicious_char_found = False
@@ -1774,18 +1802,31 @@ class DuplicateFinderApp:
 
         path_display_names = {
             "address": self._("address_label", default="API Address").rstrip(': '),
-            "scan_path": self._("scan_path_label", default="Root Path to Scan").rstrip(': '),
-            "mount_point": self._("mount_point_label", default="CloudDrive Mount Point").rstrip(': ')
+            # "scan_path" key is now used generically for listbox items
+            "scan_path": self._("scan_paths_label", default="Scan Path").rstrip(': '),
+            "mount_point": self._("mount_point_label", default="Mount Point").rstrip(': ')
         }
 
+        # Check paths passed in the dictionary (e.g., address, mount_point)
         for key, path_str in path_dict.items():
              if key not in path_display_names: continue # Only check known path fields
-
              issues = _validate_path_chars(path_str)
              if issues:
                  suspicious_char_found = True
                  display_name = path_display_names.get(key, key)
                  all_details.append(f"'{display_name}' (value: '{path_str}'): {', '.join(issues)}")
+
+        # Optionally check paths from the listbox
+        if check_scan_paths_from_listbox:
+            scan_listbox = self.widgets.get("scan_path_listbox")
+            if scan_listbox and scan_listbox.winfo_exists():
+                scan_paths = list(scan_listbox.get(0, tk.END))
+                display_name = path_display_names.get("scan_path", "Scan Path") # Use generic name
+                for i, path_str in enumerate(scan_paths):
+                    issues = _validate_path_chars(path_str)
+                    if issues:
+                        suspicious_char_found = True
+                        all_details.append(f"'{display_name}' #{i+1} (value: '{path_str}'): {', '.join(issues)}")
 
         if suspicious_char_found:
             log_sep = "!" * 70
@@ -1796,7 +1837,6 @@ class DuplicateFinderApp:
 
             warning_msg_template = self._("path_warning_suspicious_chars", default="Suspicious character(s) detected!\nPlease DELETE and MANUALLY RETYPE paths.")
             warning_lines = warning_msg_template.split('\n')
-            # Construct popup message from template lines
             popup_msg = f"{warning_lines[0]}\n\n" + "\n".join(warning_lines[1:]) if len(warning_lines) > 1 else warning_lines[0]
             instruction = warning_lines[1] if len(warning_lines) > 1 else "Please check and retype."
 
@@ -1804,11 +1844,11 @@ class DuplicateFinderApp:
             self.log_message(log_sep)
 
             if self.master.winfo_exists():
-                # Schedule the messagebox to ensure it runs in the main GUI thread
                 self.master.after(10, lambda wt=warning_title, pm=popup_msg: messagebox.showerror(wt, pm, master=self.master))
             return False # Indicate failure
 
         return True # All paths checked were valid
+    # <<< END MODIFICATION >>>
 
 
     def set_ui_state(self, mode):
@@ -1817,39 +1857,34 @@ class DuplicateFinderApp:
         Modes: 'initial', 'normal' (connected/idle), 'testing_connection', 'finding', 'deleting', 'charting'
         """
         is_idle_state = mode in ['initial', 'normal']
-        # Ensure finder object exists before accessing fs attribute
         is_connected = mode != 'initial' and self.finder is not None and self.finder.fs is not None
-
-        # Determine derived states
         has_duplicates = is_connected and bool(self.duplicate_sets)
         is_rule_selected = is_connected and bool(self.deletion_rule_var.get())
         has_files_marked_for_deletion = is_connected and bool(self.files_to_delete_cache)
 
-        # Calculate widget states based on mode and derived states
+        # Calculate widget states
         config_entry_state = tk.NORMAL if is_idle_state else tk.DISABLED
         config_button_state = tk.NORMAL if is_idle_state else tk.DISABLED
         find_button_state = tk.NORMAL if is_idle_state and is_connected else tk.DISABLED
         rules_radio_state = tk.NORMAL if is_idle_state and is_connected and has_duplicates else tk.DISABLED
-        # >>> ADDED: Control scan path browse button state <<<
-        scan_path_browse_button_state = tk.NORMAL if is_idle_state else tk.DISABLED
+        # <<< MODIFICATION: Control scan path Listbox and buttons state >>>
+        scan_path_listbox_state = tk.NORMAL if is_idle_state else tk.DISABLED
+        scan_path_button_state = tk.NORMAL if is_idle_state else tk.DISABLED
+        # <<< END MODIFICATION >>>
 
-        # Suffix entry/label only enabled if the suffix rule is selected AND other conditions met
         suffix_widgets_state = tk.DISABLED
         if is_idle_state and is_connected and has_duplicates and self.deletion_rule_var.get() == RULE_KEEP_SUFFIX:
             suffix_widgets_state = tk.NORMAL
 
-        # Delete button requires connection, duplicates, a selected rule, AND files marked by that rule
         delete_button_state = tk.NORMAL if is_idle_state and is_connected and has_duplicates and is_rule_selected and has_files_marked_for_deletion else tk.DISABLED
         save_report_button_state = tk.NORMAL if is_idle_state and is_connected and has_duplicates else tk.DISABLED
-        # Chart button requires connection, idle state, and matplotlib installed
         chart_button_state = tk.NORMAL if is_idle_state and is_connected and MATPLOTLIB_AVAILABLE else tk.DISABLED
 
-
-        # Apply states safely using try-except for widget existence
+        # Apply states safely
         for key, entry in self.entries.items():
-            if key != "suffix" and entry and entry.winfo_exists(): # Exclude suffix entry here
+            if key != "suffix" and entry and entry.winfo_exists():
                 try: entry.config(state=config_entry_state)
-                except tk.TclError: pass # Widget might be destroyed
+                except tk.TclError: pass
 
         for btn_key in ["load_button", "save_button", "test_conn_button"]:
              widget = self.widgets.get(btn_key)
@@ -1857,18 +1892,26 @@ class DuplicateFinderApp:
                  try: widget.config(state=config_button_state)
                  except tk.TclError: pass
 
-        # >>> ADDED: Set state for scan path browse button <<<
-        widget = self.widgets.get("select_scan_path_button")
+        # <<< MODIFICATION: Set state for scan path Listbox and buttons >>>
+        widget = self.widgets.get("scan_path_listbox")
         if widget and widget.winfo_exists():
-            try: widget.config(state=scan_path_browse_button_state)
+            try: widget.config(state=scan_path_listbox_state)
             except tk.TclError: pass
+        widget = self.widgets.get("add_scan_path_button")
+        if widget and widget.winfo_exists():
+            try: widget.config(state=scan_path_button_state)
+            except tk.TclError: pass
+        widget = self.widgets.get("remove_scan_path_button")
+        if widget and widget.winfo_exists():
+            try: widget.config(state=scan_path_button_state)
+            except tk.TclError: pass
+        # <<< END MODIFICATION >>>
 
         widget = self.widgets.get("find_button")
         if widget and widget.winfo_exists():
              try: widget.config(state=find_button_state)
              except tk.TclError: pass
 
-        # Rules Frame widgets
         for radio in self.rule_radios.values():
              if radio and radio.winfo_exists():
                  try: radio.config(state=rules_radio_state)
@@ -1877,26 +1920,22 @@ class DuplicateFinderApp:
         if widget and widget.winfo_exists():
              try: widget.config(state=suffix_widgets_state)
              except tk.TclError: pass
-        widget = self.widgets.get("suffix_entry") # Suffix entry widget
+        widget = self.widgets.get("suffix_entry")
         if widget and widget.winfo_exists():
              try: widget.config(state=suffix_widgets_state)
              except tk.TclError: pass
 
-        # Final action buttons
         widget = self.widgets.get("delete_button")
         if widget and widget.winfo_exists():
              try: widget.config(state=delete_button_state)
              except tk.TclError: pass
-
         widget = self.widgets.get("save_list_button")
         if widget and widget.winfo_exists():
              try: widget.config(state=save_report_button_state)
              except tk.TclError: pass
-
         widget = self.widgets.get("chart_button")
         if widget and widget.winfo_exists():
             try:
-                # Update text based on availability as well as state
                 effective_text_key = "show_chart_button" if MATPLOTLIB_AVAILABLE else "show_chart_button_disabled"
                 widget.config(state=chart_button_state, text=self._(effective_text_key))
             except tk.TclError: pass
@@ -1906,49 +1945,51 @@ class DuplicateFinderApp:
         """ Validates inputs and starts the connection test in a background thread. """
         address = self.string_vars["address"].get()
         account = self.string_vars["account"].get()
-        # Mount point is needed by finder.set_config even for test connection logic
         mount_point = self.string_vars["mount_point"].get()
-        # Scan path is also passed to set_config, though not used directly for ls('/') test
-        scan_path = self.string_vars["scan_path"].get()
+        # <<< MODIFICATION: Get scan paths (needed for set_config signature) >>>
+        scan_listbox = self.widgets.get("scan_path_listbox")
+        scan_paths = list(scan_listbox.get(0, tk.END)) if scan_listbox else []
+        # <<< END MODIFICATION >>>
 
-        # Validate required fields for connection test itself
         if not all([address, account, mount_point]):
              error_msg = self._("error_input_missing_conn", default="API Address, Account, and Mount Point are required for connection test.")
              self.log_message(error_msg)
              if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"), error_msg, master=self.master)
              return
 
-        # Validate characters in paths used by set_config
+        # <<< MODIFICATION: Check mount point, but not scan paths for connection test char validation >>>
         paths_to_check_conn = {
-            "address": address,         # Check address format implicitly
+            "address": address,         # Implicitly checked by connection attempt
             "mount_point": mount_point,
-            "scan_path": scan_path      # Check scan path as it's passed to set_config
+            # Don't check scan_paths here as they aren't strictly needed for fs.ls('/')
         }
-        if not self._check_path_chars(paths_to_check_conn):
-            # Error message handled by _check_path_chars
+        if not self._check_path_chars(paths_to_check_conn, check_scan_paths_from_listbox=False):
             return
+        # <<< END MODIFICATION >>>
 
         self.log_message(self._("status_connecting", default="Attempting connection test..."))
-        self.set_ui_state("testing_connection") # Disable UI during test
-        # Run the blocking network call in a separate thread
+        self.set_ui_state("testing_connection")
+        # <<< MODIFICATION: Pass scan_paths list to worker >>>
         thread = threading.Thread(target=self._test_connection_worker,
-                                  args=(address, account, self.string_vars["password"].get(), scan_path, mount_point),
-                                  daemon=True) # Daemon thread exits if main app exits
+                                  args=(address, account, self.string_vars["password"].get(), scan_paths, mount_point),
+                                  daemon=True)
+        # <<< END MODIFICATION >>>
         thread.start()
 
-    def _test_connection_worker(self, address, account, passwd, scan_path, mount_point):
+    # <<< MODIFICATION: Accepts list of scan_paths >>>
+    def _test_connection_worker(self, address, account, passwd, scan_paths, mount_point):
+    # <<< END MODIFICATION >>>
         """ Worker thread for testing the CloudDrive2 connection. """
         connected = False
         try:
-            # Pass log_message callback to the finder
-            connected = self.finder.set_config(address, account, passwd, scan_path, mount_point, self.log_message)
+            # <<< MODIFICATION: Pass scan_paths list to set_config >>>
+            connected = self.finder.set_config(address, account, passwd, scan_paths, mount_point, self.log_message)
+            # <<< END MODIFICATION >>>
 
-            # Schedule GUI updates (messagebox, UI state) back on the main thread
             if self.master.winfo_exists():
                  if connected:
                      success_title = self._("conn_test_success_title", default="Connection Test Successful")
                      success_msg = self._("conn_test_success_msg", default="Successfully connected to CloudDrive2.")
-                     # Use master.after to queue the messagebox in the GUI thread
                      self.master.after(10, lambda st=success_title, sm=success_msg: messagebox.showinfo(st, sm, master=self.master))
                  else:
                      fail_title = self._("conn_test_fail_title", default="Connection Test Failed")
@@ -1956,7 +1997,6 @@ class DuplicateFinderApp:
                      self.master.after(10, lambda ft=fail_title, fm=fail_msg: messagebox.showwarning(ft, fm, master=self.master))
 
         except Exception as e:
-            # Catch unexpected errors during the test itself
             error_msg = self._("error_unexpected", error=f"during connection test: {e}", default=f"Unexpected error during connection test: {e}")
             self.log_message(error_msg)
             self.log_message(traceback.format_exc())
@@ -1964,119 +2004,96 @@ class DuplicateFinderApp:
                 error_title = self._("error_title", default="Error")
                 self.master.after(10, lambda et=error_title, em=error_msg: messagebox.showerror(et, em, master=self.master))
         finally:
-            # ALWAYS Schedule UI Reset back on the main thread
             if self.master.winfo_exists():
-                # Set final state based on whether connection was successful or not
                 final_state = 'normal' if connected else 'initial'
                 self.master.after(0, self.set_ui_state, final_state)
 
 
     def start_find_duplicates_thread(self):
         """ Handles 'Find Duplicates' click. Validates inputs, clears previous results, and starts worker thread. """
-        # 1. Check Connection State
         if not self.finder or not self.finder.fs:
-             if self.master.winfo_exists(): messagebox.showwarning(self._("error_title", default="Error"),
-                                   self._("error_not_connected", default="Not connected. Please test connection first."),
-                                   master=self.master)
+             if self.master.winfo_exists(): messagebox.showwarning(self._("error_title", default="Error"), self._("error_not_connected", default="Not connected."), master=self.master)
              self.log_message(self._("error_not_connected", default="Error: Not connected. Cannot start scan."))
              return
 
-        # 2. Validate Required Inputs for Finding
-        scan_path_val = self.string_vars["scan_path"].get()
+        # <<< MODIFICATION: Get paths from listbox and validate required fields >>>
+        scan_listbox = self.widgets.get("scan_path_listbox")
+        scan_paths_val = list(scan_listbox.get(0, tk.END)) if scan_listbox else []
         mount_point_val = self.string_vars["mount_point"].get()
-        address_val = self.string_vars["address"].get() # Still needed for finder state
-        account_val = self.string_vars["account"].get() # Still needed for finder state
+        address_val = self.string_vars["address"].get()
+        account_val = self.string_vars["account"].get()
 
         missing = []
         if not address_val: missing.append(f"'{self._('address_label').rstrip(': ')}'")
         if not account_val: missing.append(f"'{self._('account_label').rstrip(': ')}'")
-        if not scan_path_val: missing.append(f"'{self._('scan_path_label').rstrip(': ')}'")
         if not mount_point_val: missing.append(f"'{self._('mount_point_label').rstrip(': ')}'")
+        if not scan_paths_val: missing.append(f"'{self._('scan_paths_label').rstrip(': ')} (at least one)")
 
         if missing:
               error_msg_base = self._("error_input_missing", default="Required fields missing")
-              # Format the message listing the missing fields
               error_msg = f"{error_msg_base}: {', '.join(missing)}."
               if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"), error_msg, master=self.master)
               self.log_message(error_msg)
               return
 
-        # 3. Validate Path Characters (Scan Path and Mount Point)
-        paths_to_check = {
-            "scan_path": scan_path_val,
-            "mount_point": mount_point_val
-        }
-        if not self._check_path_chars(paths_to_check):
-            # Error message handled by _check_path_chars
+        # Validate Path Characters (Mount Point AND Scan Paths from listbox)
+        paths_to_check = {"mount_point": mount_point_val}
+        if not self._check_path_chars(paths_to_check, check_scan_paths_from_listbox=True):
             return
+        # <<< END MODIFICATION >>>
 
-        # 4. Clear Previous Results and Set UI State
-        self.clear_results() # Clear tree, cache, rule selection
-        self.log_message(self._("find_starting", default="Starting duplicate file scan..."))
-        self.set_ui_state("finding") # Disable UI during scan
+        self.clear_results()
+        self.log_message(self._("find_starting", num_paths=len(scan_paths_val), default=f"Starting duplicate scan ({len(scan_paths_val)} paths)...")) # Log included in worker now
+        self.set_ui_state("finding")
 
-        # 5. Start Background Thread
+        # NOTE: finder already has the paths from set_config, no need to pass them again
         thread = threading.Thread(target=self._find_duplicates_worker, daemon=True)
         thread.start()
 
     def _find_duplicates_worker(self):
         """ Worker thread for finding duplicates. Calls finder method and schedules GUI update. """
-        # Double check connection state within the thread
         if not self.finder or not self.finder.fs:
             self.log_message("Error: Connection lost before Find Duplicates scan could execute.")
-            if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal') # Reset UI state
+            if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
             return
 
         found_duplicates = {}
         try:
-            start_time = time.time()
-            # Call the core logic in the finder class
+            # Call the core logic - finder now uses its stored list of paths
             found_duplicates = self.finder.find_duplicates()
-            end_time = time.time()
-            # Finder already logs duration internally.
-            # self.log_message(f"Core duplicate finding operation took {end_time - start_time:.2f} seconds.")
 
-            # Schedule the processing of results back on the main GUI thread
             if self.master.winfo_exists():
                 self.master.after(0, self._process_find_results, found_duplicates)
 
         except Exception as e:
-            # Catch unexpected errors during the find process
             err_msg = self._("find_error_during", error=e, default=f"Unexpected error during scan process: {e}")
             self.log_message(err_msg)
             self.log_message(traceback.format_exc())
             if self.master.winfo_exists():
                  error_title = self._("error_title", default="Scan Error")
-                 # Schedule error popup in main thread
                  self.master.after(10, lambda et=error_title, em=err_msg: messagebox.showerror(et, em, master=self.master))
-                 # Reset UI state in main thread on error
                  self.master.after(0, self.set_ui_state, 'normal')
 
 
     def _process_find_results(self, found_duplicates):
         """ Processes results from find_duplicates worker (runs in main thread). Updates GUI. """
-        if not self.master.winfo_exists(): return # Window closed
+        if not self.master.winfo_exists(): return
 
         self.duplicate_sets = found_duplicates if found_duplicates else {}
 
         if self.duplicate_sets:
-            # Populate the treeview with the found duplicates
             self.populate_treeview()
-            # If a rule was already selected, re-apply it visually
             if self.deletion_rule_var.get():
                 self._apply_rule_to_treeview()
         else:
-            # Clear treeview if no duplicates found
             tree = self.widgets.get("treeview")
             if tree and tree.winfo_exists():
                 try:
-                    if tree.get_children(): # Only delete if items exist
-                        tree.delete(*tree.get_children())
+                    if tree.get_children(): tree.delete(*tree.get_children())
                 except tk.TclError: pass
             self.treeview_item_map.clear()
-            # Finder already logs "no duplicates found" message
+            # Finder already logged "no duplicates found"
 
-        # Set UI state back to normal (enabling rules/buttons if duplicates were found)
         self.set_ui_state('normal')
 
 
@@ -2084,31 +2101,22 @@ class DuplicateFinderApp:
         """Clears the treeview, stored duplicate data, rule selection, and delete cache."""
         self.log_message(self._("status_clearing_tree", default="Clearing results list and rule selection..."))
 
-        # Reset data structures
         self.duplicate_sets = {}
         self.treeview_item_map = {}
         self.files_to_delete_cache = []
-
-        # Reset UI controls related to results/rules
-        self.deletion_rule_var.set("") # Clear rule selection
-        self.suffix_entry_var.set("") # Clear suffix entry
-
-        # Reset sorting state
+        self.deletion_rule_var.set("")
+        self.suffix_entry_var.set("")
         self._last_sort_col = None
         self._sort_ascending = True
 
-        # Clear the Treeview widget
         tree = self.widgets.get("treeview")
         if tree and tree.winfo_exists():
             try:
-                if tree.get_children(): # Only delete if items exist
-                    tree.delete(*tree.get_children()) # Remove all items
-                # Reset headers (clears sort indicators) after clearing
-                self.setup_treeview_headings()
-            except tk.TclError: pass # Handle if tree is destroyed
+                if tree.get_children(): tree.delete(*tree.get_children())
+                self.setup_treeview_headings() # Reset headers
+            except tk.TclError: pass
 
-        # Reset UI state (disables rule radios, delete button etc.)
-        self.set_ui_state('normal') # Set to 'normal' idle state
+        self.set_ui_state('normal')
 
 
     def populate_treeview(self):
@@ -2130,30 +2138,24 @@ class DuplicateFinderApp:
         self.log_message(self._("status_populating_tree", count=count, default=f"Populating list with {count} duplicate sets..."))
         start_time = time.time()
 
-        # --- Clear existing tree content ---
         try:
             if tree.get_children(): tree.delete(*tree.get_children())
         except tk.TclError:
             self.log_message("Error clearing treeview before population.")
-            return # Cannot proceed if clearing failed
-        self.treeview_item_map.clear() # Clear the mapping cache
+            return
+        self.treeview_item_map.clear()
 
-        # --- Insert new items ---
         set_index = 0
         items_inserted = 0
         items_failed = 0
-
-        # Sort sets by SHA1 for consistent display order
         sorted_sha1s = sorted(self.duplicate_sets.keys())
 
         for sha1 in sorted_sha1s:
             files_in_set = self.duplicate_sets[sha1]
-            # Ensure it's a valid duplicate set (at least 2 files)
             if not isinstance(files_in_set, list) or len(files_in_set) < 2:
-                continue # Skip invalid sets silently or log a warning if needed
+                continue
 
             set_index += 1
-            # Sort files within the set by path for readability
             sorted_files = sorted(files_in_set, key=lambda x: x.get('path', ''))
 
             for file_info in sorted_files:
@@ -2165,47 +2167,27 @@ class DuplicateFinderApp:
                          continue
 
                     mod_time = file_info.get('modified')
-                    # Format datetime safely, handling None
                     mod_time_str = mod_time.strftime(DATE_FORMAT) if isinstance(mod_time, datetime) else "N/A"
-
                     size = file_info.get('size')
-                    # Calculate size safely, handling None or non-numeric types
                     size_mb = size / (1024 * 1024) if isinstance(size, (int, float)) and size > 0 else 0.0
-
                     set_id_str = self._("tree_set_col_value", index=set_index, default=f"{set_index}")
 
-                    # Define values tuple in the order of self.columns
-                    # ("action", "path", "modified", "size_mb", "set_id")
-                    values = (
-                        "",         # Action (initially empty)
-                        path,
-                        mod_time_str,
-                        f"{size_mb:.2f}", # Format size to 2 decimal places
-                        set_id_str
-                    )
-                    # Use the unique file path as the item identifier (iid)
+                    values = ("", path, mod_time_str, f"{size_mb:.2f}", set_id_str)
                     item_id = path
 
-                    # Insert into treeview
-                    # Check if item with this ID already exists (should not happen if cleared correctly, but safety check)
                     if not tree.exists(item_id):
-                         tree.insert("", tk.END, iid=item_id, values=values, tags=()) # No tags initially
-                         # Store the full file_info dict mapped to its item ID (path)
+                         tree.insert("", tk.END, iid=item_id, values=values, tags=())
                          self.treeview_item_map[item_id] = file_info
                          items_inserted += 1
                     else:
                          self.log_message(f"Warning: Item with path '{path}' already exists in tree. Skipping duplicate insertion.")
                          items_failed += 1
 
-
                 except tk.TclError as e:
-                     # Handle errors during insertion (e.g., if path is somehow duplicated as iid)
                      self.log_message(f"Error inserting item with path '{path}' into tree: {e}")
                      items_failed += 1
-                     # Clean up map if insertion failed for an ID already added
                      if item_id in self.treeview_item_map: del self.treeview_item_map[item_id]
                 except Exception as e:
-                     # Catch other unexpected errors during processing
                      self.log_message(f"Unexpected error processing file '{file_info.get('path', 'Unknown')}' for treeview: {e}")
                      self.log_message(traceback.format_exc(limit=2))
                      items_failed += 1
@@ -2218,27 +2200,21 @@ class DuplicateFinderApp:
         log_summary += f" in {duration:.2f}s)"
         self.log_message(log_summary)
 
-        # Reset sorting state after population (important!)
         self._last_sort_col = None
         self._sort_ascending = True
-        self.setup_treeview_headings() # Apply headers and clear sort indicators
-
-        # Note: Applying the rule is handled separately after population if needed
+        self.setup_treeview_headings()
 
 
     def _on_rule_change(self):
         """Called when a deletion rule radio button is selected."""
         selected_rule = self.deletion_rule_var.get()
 
-        # Update suffix entry state immediately based on rule selection and other conditions
         is_suffix_rule = (selected_rule == RULE_KEEP_SUFFIX)
-        # Suffix entry should only be enabled if suffix rule is selected AND we are connected AND have duplicates
         can_enable_suffix = (is_suffix_rule and
                              self.finder is not None and self.finder.fs is not None and
                              bool(self.duplicate_sets))
         suffix_widgets_state = tk.NORMAL if can_enable_suffix else tk.DISABLED
 
-        # Apply state to suffix label and entry safely
         suffix_label = self.widgets.get("suffix_label")
         if suffix_label and suffix_label.winfo_exists():
             try: suffix_label.config(state=suffix_widgets_state)
@@ -2248,11 +2224,9 @@ class DuplicateFinderApp:
             try: suffix_entry.config(state=suffix_widgets_state)
             except tk.TclError: pass
 
-        # Clear suffix text if a different rule is selected
         if not is_suffix_rule:
             self.suffix_entry_var.set("")
 
-        # Re-apply the selected rule to update Treeview highlighting and delete cache
         self._apply_rule_to_treeview()
 
 
@@ -2260,32 +2234,28 @@ class DuplicateFinderApp:
         """
         Updates the 'Action' column and highlighting in the treeview based on the
         selected deletion rule. Updates the `files_to_delete_cache`.
-        `log_update`: If True, logs the "Applying rule..." message. Set to False during language change.
         """
         tree = self.widgets.get("treeview")
-        # Exit if no duplicates, or treeview doesn't exist
         if not self.duplicate_sets or not tree or not tree.winfo_exists():
-            self.files_to_delete_cache = [] # Clear cache if no data
-            self.set_ui_state('normal') # Ensure delete button is disabled etc.
+            self.files_to_delete_cache = []
+            self.set_ui_state('normal')
             return
 
         selected_rule = self.deletion_rule_var.get()
 
-        # If no rule is selected, clear action column and cache
         if not selected_rule:
             self.files_to_delete_cache = []
             try:
-                if tree.winfo_exists(): # Check tree again
+                if tree.winfo_exists():
                     for item_id in self.treeview_item_map.keys():
                         if tree.exists(item_id):
-                            tree.set(item_id, "action", "") # Clear action text
-                            tree.item(item_id, tags=())     # Clear tags (highlighting)
+                            tree.set(item_id, "action", "")
+                            tree.item(item_id, tags=())
             except tk.TclError: pass
-            self.set_ui_state('normal') # Reset UI state (likely disables delete button)
+            self.set_ui_state('normal')
             return
 
-        # --- A rule IS selected ---
-        rule_name_display_key = f"rule_{selected_rule}" # e.g., rule_shortest
+        rule_name_display_key = f"rule_{selected_rule}"
         rule_name_display = self._(rule_name_display_key, default=selected_rule.replace('_', ' ').title())
 
         if log_update:
@@ -2295,57 +2265,40 @@ class DuplicateFinderApp:
         keep_text = self._("tree_action_keep", default="Keep")
         delete_text = self._("tree_action_delete", default="Delete")
         suffix_to_keep = self.suffix_entry_var.get() if selected_rule == RULE_KEEP_SUFFIX else None
-
         delete_count = 0
         application_error = False
 
         try:
-            # Call helper function to determine which files *should* be deleted
             files_to_delete_list = self._determine_files_to_delete(self.duplicate_sets, selected_rule, suffix_to_keep)
-
-            # Update Cache
-            self.files_to_delete_cache = files_to_delete_list # Store the paths
-            # Create a set for efficient lookup during UI update
+            self.files_to_delete_cache = files_to_delete_list
             files_to_delete_paths_set = set(files_to_delete_list)
             delete_count = len(files_to_delete_paths_set)
 
-            # --- Update Treeview items visually ---
             tree_update_start = time.time()
-            # Check if tree exists *before* iterating
             if not tree.winfo_exists():
                 raise tk.TclError("Treeview destroyed during rule application")
 
-            # Iterate over a copy of the keys, as map might change if errors occur
             for item_id in list(self.treeview_item_map.keys()):
-                 # Check if the item still exists in the treeview AND map
                  if tree.exists(item_id) and item_id in self.treeview_item_map:
-                     file_info = self.treeview_item_map[item_id] # Already checked existence in map
+                     file_info = self.treeview_item_map[item_id]
                      path = file_info.get('path')
-                     if not path: continue # Skip if path somehow missing
+                     if not path: continue
 
-                     # Determine action and tag based on whether path is in the delete set
                      is_marked_for_delete = (path in files_to_delete_paths_set)
                      action_text = delete_text if is_marked_for_delete else keep_text
                      item_tags = ('delete',) if is_marked_for_delete else ('keep',)
-
-                     # Update the treeview item's "Action" column and apply the tag
                      tree.set(item_id, "action", action_text)
                      tree.item(item_id, tags=item_tags)
 
             tree_update_end = time.time()
             if log_update:
                 self.log_message(self._("status_rule_applied", delete_count=delete_count, default=f"Rule applied. {delete_count} files marked for deletion."))
-                # Optional: Log performance
-                # print(f"Treeview visual update took {tree_update_end - tree_update_start:.3f}s")
-
 
         except ValueError as ve:
-             # Handle specific errors from _determine_files_to_delete (e.g., missing suffix)
              self.log_message(f"Rule Application Error: {ve}")
              if self.master.winfo_exists(): messagebox.showerror(self._("error_rule_title", default="Rule Error"), str(ve), master=self.master)
              application_error = True
-             self.files_to_delete_cache = [] # Clear cache on error
-             # Clear visual indicators in tree
+             self.files_to_delete_cache = []
              try:
                  if tree.winfo_exists():
                      for item_id in self.treeview_item_map.keys():
@@ -2354,29 +2307,20 @@ class DuplicateFinderApp:
                              tree.item(item_id, tags=())
              except tk.TclError: pass
              delete_count = 0
-
         except tk.TclError as e:
-             # Handle errors if treeview is destroyed during update
              self.log_message(f"Error updating treeview during rule application: {e}")
-             self.files_to_delete_cache = [] # Clear cache
+             self.files_to_delete_cache = []
              application_error = True
              delete_count = 0
         except Exception as e:
-             # Catch any other unexpected errors
              self.log_message(f"Unexpected error applying rule '{selected_rule}' to treeview: {e}")
              self.log_message(traceback.format_exc())
-             self.files_to_delete_cache = [] # Clear cache
+             self.files_to_delete_cache = []
              application_error = True
              delete_count = 0
         finally:
-            # Log total duration if a rule was processed
             if selected_rule and log_update:
                 end_time = time.time()
-                # Optional: Log total performance
-                # print(f"Rule determination & tree update took {end_time-start_time:.3f}s total")
-
-            # ALWAYS Update UI State after applying rule (or attempting to)
-            # This will correctly enable/disable the delete button based on cache state
             self.set_ui_state('normal')
 
 
@@ -2384,86 +2328,58 @@ class DuplicateFinderApp:
         """
         Determines which files to delete based on the selected rule and duplicate sets.
         Handles tie-breaking using shortest path as default. Logs warnings via self.log_message.
-
         Returns: list: A list of full file paths (str) to be deleted.
         Raises: ValueError: If rule is invalid or suffix is missing when required.
         """
-        if not isinstance(duplicate_sets, dict) or not duplicate_sets:
-             return [] # No duplicates to process
-        if not rule:
-             # Raise error if no rule is provided (should be caught earlier, but good validation)
-             raise ValueError(self._("delete_no_rule_selected", default="No deletion rule selected."))
-        if rule == RULE_KEEP_SUFFIX and not suffix_value:
-             # Raise error if suffix rule is chosen but no suffix provided
-             raise ValueError(self._("delete_suffix_missing", default="Suffix is required for the 'Keep Suffix' rule."))
-        # Validate rule value against known constants
+        if not isinstance(duplicate_sets, dict) or not duplicate_sets: return []
+        if not rule: raise ValueError(self._("delete_no_rule_selected", default="No deletion rule selected."))
+        if rule == RULE_KEEP_SUFFIX and not suffix_value: raise ValueError(self._("delete_suffix_missing", default="Suffix is required for the 'Keep Suffix' rule."))
         valid_rules = {RULE_KEEP_SHORTEST, RULE_KEEP_LONGEST, RULE_KEEP_OLDEST, RULE_KEEP_NEWEST, RULE_KEEP_SUFFIX}
-        if rule not in valid_rules:
-             raise ValueError(f"Internal Error: Unknown deletion rule '{rule}'.")
+        if rule not in valid_rules: raise ValueError(f"Internal Error: Unknown deletion rule '{rule}'.")
 
         files_to_delete = []
-        log_func = self.log_message # Use the GUI's log method directly
+        log_func = self.log_message
         tie_break_prefix = self._("tie_break_log_prefix", default="Tie-Break:")
 
-        # --- Tie-breaking Function (using shortest path) ---
         def tie_break_shortest_path(candidates, reason_for_tiebreak):
-             if not candidates: return None # No candidates to break tie for
-             if len(candidates) == 1: return candidates[0] # Only one candidate, it wins
-
-             # Sort candidates first by path length (ascending), then alphabetically by path for determinism
+             if not candidates: return None
+             if len(candidates) == 1: return candidates[0]
              sorted_candidates = sorted(candidates, key=lambda f: (len(f.get('path', '')), f.get('path', '')))
-             winner = sorted_candidates[0] # Shortest path wins
-
-             # Log the tie-break decision only if a tie actually occurred (more than 1 candidate)
-             log_func(self._("warning_tie_break",
-                              prefix=tie_break_prefix,
-                              reason=reason_for_tiebreak,
-                              filename=os.path.basename(winner.get('path','N/A')),
-                              detail=f"Shortest path of {len(candidates)}",
-                              default=f"{tie_break_prefix} {reason_for_tiebreak}. Kept '{os.path.basename(winner.get('path','N/A'))}' (Shortest path of {len(candidates)})."))
+             winner = sorted_candidates[0]
+             log_func(self._("warning_tie_break", prefix=tie_break_prefix, reason=reason_for_tiebreak, filename=os.path.basename(winner.get('path','N/A')), detail=f"Shortest path of {len(candidates)}", default=f"{tie_break_prefix} {reason_for_tiebreak}. Kept '{os.path.basename(winner.get('path','N/A'))}' (Shortest path of {len(candidates)})."))
              return winner
 
-        # --- Iterate through each duplicate set ---
         for set_index, (sha1, files_in_set) in enumerate(duplicate_sets.items()):
-            # Basic validation for the set
-            if not isinstance(files_in_set, list) or len(files_in_set) < 2:
-                continue # Skip sets that aren't actual duplicates
-
-            keep_file_info = None # Info of the file decided to keep in this set
-            set_id_for_log = f"Set {set_index+1} (SHA1: {sha1[:8]}...)" # For clearer logs
+            if not isinstance(files_in_set, list) or len(files_in_set) < 2: continue
+            keep_file_info = None
+            set_id_for_log = f"Set {set_index+1} (SHA1: {sha1[:8]}...)"
 
             try:
-                candidates = [] # List of files potentially eligible to be kept based on the rule
-                reason_for_tiebreak = "" # Reason if tie-breaking is needed
+                candidates = []
+                reason_for_tiebreak = ""
 
-                # --- Apply the selected rule to find candidates ---
                 if rule == RULE_KEEP_SHORTEST:
-                    # Ensure paths exist for comparison
                     valid_files = [f for f in files_in_set if f.get('path') is not None]
-                    if not valid_files: continue # Skip set if no paths found
+                    if not valid_files: continue
                     min_len = min(len(f.get('path', '')) for f in valid_files)
                     candidates = [f for f in valid_files if len(f.get('path', '')) == min_len]
                     reason_for_tiebreak = f"Multiple files have min path length ({min_len})"
-
                 elif rule == RULE_KEEP_LONGEST:
                     valid_files = [f for f in files_in_set if f.get('path') is not None]
                     if not valid_files: continue
                     max_len = max(len(f.get('path', '')) for f in valid_files)
                     candidates = [f for f in valid_files if len(f.get('path', '')) == max_len]
                     reason_for_tiebreak = f"Multiple files have max path length ({max_len})"
-
                 elif rule == RULE_KEEP_OLDEST:
-                    # Filter for files with valid datetime objects first
                     valid_files = [f for f in files_in_set if isinstance(f.get('modified'), datetime)]
                     if not valid_files:
                         log_func(self._("warning_rule_no_date", set_id=set_id_for_log, rule=rule, default=f"Warning: {set_id_for_log} - Cannot apply '{rule}': No valid dates. Keeping shortest path."))
-                        candidates = list(files_in_set) # Fallback: consider all original files
+                        candidates = list(files_in_set)
                         reason_for_tiebreak = "No valid dates found"
                     else:
                         min_date = min(f['modified'] for f in valid_files)
                         candidates = [f for f in valid_files if f['modified'] == min_date]
                         reason_for_tiebreak = f"Multiple files have oldest date ({min_date.strftime(DATE_FORMAT)})"
-
                 elif rule == RULE_KEEP_NEWEST:
                     valid_files = [f for f in files_in_set if isinstance(f.get('modified'), datetime)]
                     if not valid_files:
@@ -2474,645 +2390,421 @@ class DuplicateFinderApp:
                         max_date = max(f['modified'] for f in valid_files)
                         candidates = [f for f in valid_files if f['modified'] == max_date]
                         reason_for_tiebreak = f"Multiple files have newest date ({max_date.strftime(DATE_FORMAT)})"
-
                 elif rule == RULE_KEEP_SUFFIX:
-                    suffix_lower = suffix_value.lower() # Case-insensitive comparison
+                    suffix_lower = suffix_value.lower()
                     candidates = [f for f in files_in_set if f.get('path', '').lower().endswith(suffix_lower)]
                     if not candidates:
                          log_func(self._("warning_rule_no_suffix_match", set_id=set_id_for_log, suffix=suffix_value, default=f"Warning: {set_id_for_log} - No files match suffix '{suffix_value}'. Keeping shortest path."))
-                         candidates = list(files_in_set) # Fallback: consider all original files
+                         candidates = list(files_in_set)
                          reason_for_tiebreak = f"No files match suffix '{suffix_value}'"
                     else:
                          reason_for_tiebreak = f"Multiple files match suffix '{suffix_value}'"
 
-                # --- Apply Tie-breaker if needed ---
-                # Only call tie-breaker if more than one candidate remains, or if falling back due to rule failure
                 if len(candidates) > 1 or (not candidates and rule in [RULE_KEEP_OLDEST, RULE_KEEP_NEWEST, RULE_KEEP_SUFFIX]):
-                    # If falling back, candidates list was reset to files_in_set
-                    if not candidates: candidates = list(files_in_set) # Ensure candidates is populated for tiebreak
-                    # Pass the specific reason if tie-breaking occurs
+                    if not candidates: candidates = list(files_in_set)
                     full_reason = f"{set_id_for_log} - {reason_for_tiebreak}"
                     keep_file_info = tie_break_shortest_path(candidates, full_reason)
                 elif len(candidates) == 1:
-                     keep_file_info = candidates[0] # Only one candidate, it wins automatically
+                     keep_file_info = candidates[0]
                 else:
-                     # No candidates found initially (e.g., shortest/longest path check found nothing - should be impossible if list > 1)
-                     # Or if rule failed and fallback also resulted in empty candidates (e.g. files_in_set was empty/invalid)
                      keep_file_info = None
 
-                # --- Add Files to Delete List ---
                 if keep_file_info and keep_file_info.get('path'):
                     keep_path = keep_file_info['path']
-                    # Add all *other* files in the set to the deletion list
                     for f_info in files_in_set:
                         path = f_info.get('path')
                         if path and path != keep_path:
                             files_to_delete.append(path)
                 else:
-                     # Log if no file could be selected to keep
                      log_func(self._("warning_rule_failed_selection", set_id=set_id_for_log, rule=rule, default=f"Internal Warning: {set_id_for_log} - Rule '{rule}' failed to select file to keep. Skipping deletion for this set."))
 
             except Exception as e:
-                 # Catch errors during rule application for a specific set
                  log_func(self._("error_rule_application", set_id=set_id_for_log, rule=rule, error=e, default=f"Error applying rule '{rule}' to {set_id_for_log}: {e}. Skipping deletion for this set."))
-                 log_func(traceback.format_exc(limit=2)) # Log traceback for debugging
+                 log_func(traceback.format_exc(limit=2))
 
-        return files_to_delete # Return the final list of paths to delete
+        return files_to_delete
 
 
     def start_delete_by_rule_thread(self):
         """ Handles 'Delete Marked Files' click. Validates, confirms, starts worker thread. """
         selected_rule = self.deletion_rule_var.get()
 
-        # 1. Check if a rule is selected
         if not selected_rule:
-             if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"),
-                                   self._("delete_no_rule_selected", default="Please select a deletion rule first."),
-                                   master=self.master)
+             if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"), self._("delete_no_rule_selected", default="Please select a rule."), master=self.master)
              return
-
-        # 2. Check if suffix is provided if suffix rule is selected
         if selected_rule == RULE_KEEP_SUFFIX and not self.suffix_entry_var.get():
-             if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"),
-                                   self._("delete_suffix_missing", default="Please enter the suffix for the 'Keep Suffix' rule."),
-                                   master=self.master)
+             if self.master.winfo_exists(): messagebox.showerror(self._("error_input_title", default="Input Error"), self._("delete_suffix_missing", default="Enter suffix for 'Keep Suffix' rule."), master=self.master)
              return
-
-        # 3. CRITICAL Check: Use the cached list generated by _apply_rule_to_treeview
         if not self.files_to_delete_cache:
              rule_name_key = f"rule_{selected_rule}"
              rule_name_for_log = self._(rule_name_key, default=selected_rule.title())
-             if self.master.winfo_exists(): messagebox.showinfo(self._("delete_by_rule_button", default="Delete Marked Files"),
-                                 self._("delete_rule_no_files", default="No files are currently marked for deletion based on the applied rule."),
-                                 master=self.master)
+             if self.master.winfo_exists(): messagebox.showinfo(self._("delete_by_rule_button", default="Delete Marked"), self._("delete_rule_no_files", default="No files marked for deletion."), master=self.master)
              self.log_message(self._("delete_rule_no_files", default="No files marked for deletion.") + f" (Rule: {rule_name_for_log})")
              return
 
-        # 4. Confirmation Dialog
         num_files_to_delete = len(self.files_to_delete_cache)
         rule_name_key = f"rule_{selected_rule}"
         rule_name_for_msg = self._(rule_name_key, default=selected_rule.title())
-        confirm_msg_template = self._("delete_confirm_msg",
-                                     rule_name=rule_name_for_msg,
-                                     default="Delete marked files based on rule: '{rule_name}'?\nTHIS ACTION CANNOT BE UNDONE.")
-        # Add file count to confirmation message
+        confirm_msg_template = self._("delete_confirm_msg", rule_name=rule_name_for_msg, default="Delete marked files based on rule: '{rule_name}'?\nTHIS ACTION CANNOT BE UNDONE.")
         confirm_msg = f"{confirm_msg_template}\n\n({num_files_to_delete} files will be permanently deleted)"
 
         confirm = False
         if self.master.winfo_exists():
-            # Show warning icon and default to 'No'
-            confirm = messagebox.askyesno(
-                title=self._("delete_confirm_title", default="Confirm Deletion"),
-                message=confirm_msg,
-                icon='warning',
-                default='no',
-                master=self.master
-            )
+            confirm = messagebox.askyesno(title=self._("delete_confirm_title", default="Confirm Deletion"), message=confirm_msg, icon='warning', default='no', master=self.master)
 
         if not confirm:
-            self.log_message(self._("delete_cancelled", default="Deletion cancelled by user."))
-            return # User cancelled
+            self.log_message(self._("delete_cancelled", default="Deletion cancelled."))
+            return
 
-        # 5. Start Deletion Process
         self.log_message(self._("delete_starting", rule_name=rule_name_for_msg, default=f"Starting deletion (Rule: {rule_name_for_msg})..."))
-        self.set_ui_state("deleting") # Disable UI during deletion
+        self.set_ui_state("deleting")
 
-        # Pass a *copy* of the cached list to the worker thread
-        # This prevents issues if the cache is somehow modified while the thread runs
         files_to_delete_list_copy = list(self.files_to_delete_cache)
-
-        thread = threading.Thread(target=self._delete_worker,
-                                  args=(files_to_delete_list_copy, rule_name_for_msg), # Pass rule name for logging context
-                                  daemon=True)
+        thread = threading.Thread(target=self._delete_worker, args=(files_to_delete_list_copy, rule_name_for_msg), daemon=True)
         thread.start()
 
     def _delete_worker(self, files_to_delete, rule_name_for_log):
         """ Worker thread for deleting files based on the provided list. """
-        # Check connection state within the thread
         if not self.finder or not self.finder.fs:
-            self.log_message(
-                self._("error_not_connected", default="Error: Connection lost before Deletion could execute."))
-            if self.master.winfo_exists():
-                self.master.after(0, self.set_ui_state, 'normal')  # Reset UI state
+            self.log_message(self._("error_not_connected", default="Error: Connection lost before Deletion."))
+            if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
             return
 
         deleted_count = 0
         total_attempted = len(files_to_delete)
         deletion_error_occurred = False
-        should_clear_results = False  # Flag to control clearing results
+        should_clear_results = False
 
         try:
             if not files_to_delete:
-                # This check is mostly redundant due to the check before starting thread, but safe to keep
-                self.log_message(self._("delete_rule_no_files",
-                                        default="No files to delete.") + f" (Worker check; Rule: {rule_name_for_log})")
+                self.log_message(self._("delete_rule_no_files", default="No files to delete.") + f" (Worker check; Rule: {rule_name_for_log})")
             else:
-                # Call the finder's delete method
                 deleted_count, total_attempted = self.finder.delete_files(files_to_delete)
-                # Finder logs completion and errors internally now
-                if deleted_count < total_attempted:
-                    deletion_error_occurred = True  # Track if any errors occurred
-
-            # If deletion was attempted (even if partially failed), mark results for clearing
-            if total_attempted > 0:
-                should_clear_results = True
+                if deleted_count < total_attempted: deletion_error_occurred = True
+            if total_attempted > 0: should_clear_results = True
 
         except Exception as e:
-            # Catch unexpected errors during the deletion process itself
             deletion_error_occurred = True
             err_msg = self._("delete_error_during", error=e, default=f"Unexpected error during deletion process: {e}")
             self.log_message(err_msg)
             self.log_message(traceback.format_exc())
             if self.master.winfo_exists():
                 error_title = self._("error_title", default="Deletion Error")
-                # Schedule error popup in main thread
-                self.master.after(10,
-                                  lambda et=error_title, em=err_msg: messagebox.showerror(et, em, master=self.master))
-            # Do not clear results on unexpected error, allow user to see state
+                self.master.after(10, lambda et=error_title, em=err_msg: messagebox.showerror(et, em, master=self.master))
             should_clear_results = False
-
         finally:
-            # --- Actions to perform after try/except, regardless of outcome ---
-            # Ensure this finally block is correctly indented relative to the try/except
             if self.master.winfo_exists():
-                # Schedule results clearing if flagged
                 if should_clear_results:
-                    # IMPORTANT: Clear results after delete attempt, forcing a re-scan.
-                    # Use master.after(10,...) to allow potential error popups or final log messages to appear first
                     self.master.after(10, self.clear_results)
-                    # Add a log message confirming results are cleared
-                    self.master.after(20, lambda: self.log_message(
-                        self._("delete_results_cleared", default="Deletion finished. Results cleared.")))
-                    # Note: clear_results() internally calls set_ui_state('normal')
+                    self.master.after(20, lambda: self.log_message(self._("delete_results_cleared", default="Deletion finished. Results cleared.")))
                 else:
-                    # If results are not being cleared (e.g., due to unexpected error),
-                    # ensure the UI is re-enabled.
-                    self.master.after(0, self.set_ui_state, 'normal')  # Reset UI state directly
+                    self.master.after(0, self.set_ui_state, 'normal')
 
 
     # --- Methods related to Report Saving and Charting ---
-    # !!! CORRECTED INDENTATION FOR METHODS BELOW !!!
-
     def save_duplicates_report(self):
         """ Saves the report of FOUND duplicate file sets to a text file. """
-        # Check if there are any duplicates found and stored
         if not self.duplicate_sets:
-            if self.master.winfo_exists(): messagebox.showinfo(
-                self._("save_list_button", default="Save Report"),
-                self._("save_report_no_data", default="No duplicate sets found to save."),
-                master=self.master)
-            self.log_message(self._("save_report_no_data", default="No duplicate sets available to save."))
+            if self.master.winfo_exists(): messagebox.showinfo(self._("save_list_button", default="Save Report"), self._("save_report_no_data", default="No duplicates to save."), master=self.master)
+            self.log_message(self._("save_report_no_data", default="No duplicate sets available."))
             return
 
-        # Generate a default filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         initial_filename = f"duplicates_report_{timestamp}.txt"
-
         file_path = None
         try:
-            # Open the "Save As" dialog
             file_path = filedialog.asksaveasfilename(
-                defaultextension=".txt",
-                filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
-                title=self._("save_list_button", default="Save Found Duplicates Report As..."),
-                initialfile=initial_filename,
-                parent=self.master  # Ensure dialog is modal to the main window
+                defaultextension=".txt", filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+                title=self._("save_list_button", default="Save Duplicates Report As..."),
+                initialfile=initial_filename, parent=self.master
             )
         except Exception as fd_e:
-            # Catch errors opening the dialog itself (rare)
             self.log_message(f"Error opening save file dialog: {fd_e}")
-            if self.master.winfo_exists(): messagebox.showerror(self._("error_title", default="Error"),
-                                                                f"Could not open save dialog: {fd_e}",
-                                                                master=self.master)
+            if self.master.winfo_exists(): messagebox.showerror(self._("error_title", default="Error"), f"Could not open save dialog: {fd_e}", master=self.master)
             return
 
-        # If the user selected a file (didn't cancel)
         if file_path:
-            # Call the finder's method to write the report
-            # Finder handles logging success/failure internally now
             success = self.finder.write_duplicates_report(self.duplicate_sets, file_path)
-            # Show confirmation popup on success
             if success and self.master.winfo_exists():
                 messagebox.showinfo(
                     self._("save_list_button", default="Report Saved"),
-                    # Use the saved message from finder's log if desired, or keep generic one
-                    self._("save_report_saved", file=os.path.basename(file_path),
-                            default="Report saved successfully."),
+                    self._("save_report_saved", file=os.path.basename(file_path), default="Report saved."),
                     master=self.master)
         else:
-            # User cancelled the save dialog
-            self.log_message("Save report operation cancelled by user.")
+            self.log_message("Save report operation cancelled.")
 
     def show_cloud_file_types(self):
         """ Handles 'Show Cloud File Types' click. Validates prerequisites and starts worker thread. """
-        # 1. Check if Matplotlib is available
         if not MATPLOTLIB_AVAILABLE:
-            if self.master.winfo_exists(): messagebox.showwarning(
-                self._("chart_error_title", default="Chart Error"),
-                self._("chart_error_no_matplotlib", default="Matplotlib library not found. Please install it."),
-                master=self.master)
-            self.log_message(
-                self._("chart_error_no_matplotlib", default="Matplotlib not found, cannot show chart."))
+            if self.master.winfo_exists(): messagebox.showwarning(self._("chart_error_title", default="Chart Error"), self._("chart_error_no_matplotlib", default="Matplotlib not found."), master=self.master)
+            self.log_message(self._("chart_error_no_matplotlib", default="Matplotlib not found."))
             return
-
-        # 2. Check CloudDrive Connection
         if not self.finder or not self.finder.fs:
-            if self.master.winfo_exists(): messagebox.showwarning(
-                self._("chart_error_title", default="Chart Error"),
-                self._("chart_error_no_connection",
-                        default="Not connected to CloudDrive. Cannot scan for chart data."),
-                master=self.master)
-            self.log_message(
-                self._("chart_error_no_connection", default="Not connected, cannot generate chart."))
+            if self.master.winfo_exists(): messagebox.showwarning(self._("chart_error_title", default="Chart Error"), self._("chart_error_no_connection", default="Not connected."), master=self.master)
+            self.log_message(self._("chart_error_no_connection", default="Not connected, cannot chart."))
             return
 
-        # 3. Validate Required Inputs for Chart Scan
-        scan_path_raw = self.string_vars["scan_path"].get()
+        # <<< MODIFICATION: Get paths from listbox and validate inputs >>>
+        scan_listbox = self.widgets.get("scan_path_listbox")
+        scan_paths_raw = list(scan_listbox.get(0, tk.END)) if scan_listbox else []
         mount_point_raw = self.string_vars["mount_point"].get()
-        if not scan_path_raw or not mount_point_raw:
-            error_msg = self._("error_input_missing_chart",
-                                default="Root Path to Scan and Mount Point are required to generate the chart.")
-            if self.master.winfo_exists(): messagebox.showwarning(
-                self._("error_input_title", default="Input Error"), error_msg, master=self.master)
+
+        if not mount_point_raw or not scan_paths_raw:
+            error_msg = self._("error_input_missing_chart", default="Mount Point and at least one Scan Path required for chart.")
+            if self.master.winfo_exists(): messagebox.showwarning(self._("error_input_title", default="Input Error"), error_msg, master=self.master)
             self.log_message(error_msg)
             return
 
-        # 4. Validate Path Characters
-        paths_to_check_chart = {
-            "scan_path": scan_path_raw,
-            "mount_point": mount_point_raw
-        }
-        if not self._check_path_chars(paths_to_check_chart):
-            # Error message handled by _check_path_chars
+        # Validate Path Characters (Mount Point AND Scan Paths from listbox)
+        paths_to_check_chart = {"mount_point": mount_point_raw}
+        if not self._check_path_chars(paths_to_check_chart, check_scan_paths_from_listbox=True):
             return
+        # <<< END MODIFICATION >>>
 
-        # 5. Start Worker Thread
         self.log_message("Starting scan for file type chart data...")
-        self.set_ui_state("charting")  # Disable UI during chart scan
+        self.set_ui_state("charting")
 
+        # Pass the list of raw paths to the worker
         thread = threading.Thread(target=self._show_cloud_file_types_worker,
-                                    args=(scan_path_raw, mount_point_raw), daemon=True)
+                                    args=(scan_paths_raw, mount_point_raw), daemon=True)
         thread.start()
 
-    def _show_cloud_file_types_worker(self, scan_path_raw, mount_point_raw):
-        """ Worker thread to scan cloud files, count types, and schedule chart creation. """
-        fs_dir_path = None
-        file_counts = collections.Counter()
-        total_files = 0
-        scan_error = None
+    # <<< MODIFICATION: Accepts list of raw paths >>>
+    def _show_cloud_file_types_worker(self, scan_paths_raw, mount_point_raw):
+        """ Worker thread to scan multiple cloud paths, count types, and schedule chart creation. """
+        all_file_counts = collections.Counter() # Aggregate counts here
+        total_files_overall = 0
+        any_scan_error = False
+        processed_path_count = 0
 
         try:
-            # --- Pre-scan Checks ---
-            if not self.finder:
-                self.log_message("Error: Finder object not initialized. Cannot perform chart scan.")
+            if not self.finder or not self.finder.fs:
+                self.log_message(self._("chart_error_no_connection", default="Cannot chart: Connection lost."))
                 if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
                 return
 
-            # Calculate the effective filesystem path
-            fs_dir_path = self.finder.calculate_fs_path(scan_path_raw, mount_point_raw)
-            if fs_dir_path is None:
-                self.log_message("Chart generation aborted due to path calculation error.")
-                if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
-                return
+            self.log_message(self._("chart_status_scan_paths_start", num_paths=len(scan_paths_raw), default=f"Starting chart scan across {len(scan_paths_raw)} path(s)..."))
 
-            # Check connection again within thread
-            if not self.finder.fs:
-                self.log_message(
-                    self._("chart_error_no_connection", default="Cannot chart: Connection lost before scan."))
-                if self.master.winfo_exists(): self.master.after(0, self.set_ui_state, 'normal')
-                return
+            # --- Iterate through each raw scan path ---
+            for raw_scan_path_entry in scan_paths_raw:
+                fs_dir_path = self.finder.calculate_fs_path(raw_scan_path_entry, mount_point_raw)
+                if fs_dir_path is None:
+                    self.log_message(f"Chart Scan: Skipping invalid path entry '{raw_scan_path_entry}'.")
+                    any_scan_error = True # Treat path calculation error as a scan error for this path
+                    continue
 
-            # --- Perform Scan ---
-            self.log_message(self._("chart_status_scanning_cloud", path=fs_dir_path,
-                                    default=f"Scanning '{fs_dir_path}' for file types..."))
-            scan_start_time = time.time()
-            try:
-                # Use walk_path to iterate through files recursively
-                for dirpath, _, filenames in self.finder.fs.walk_path(fs_dir_path):
-                    for filename_obj in filenames:
-                        try:
-                            # Construct full path correctly using dirpath and filename
-                            full_path = _build_full_path(str(dirpath), str(filename_obj))
-                            filename = os.path.basename(full_path) # Extract just the filename
+                self.log_message(self._("chart_status_scanning_cloud", path=fs_dir_path, default=f"Scanning '{fs_dir_path}' for file types..."))
+                scan_start_time = time.time()
+                path_files = 0
+                path_error = None
 
-                            total_files += 1
-                            # Get extension, handle files with no extension
-                            _root, ext = os.path.splitext(filename)
-                            ext_label = ext.lower() if ext else self._("chart_label_no_extension",
-                                                                        default="[No Ext]")
-                            file_counts[ext_label] += 1
-                        except Exception as inner_e:
-                            # Log errors processing individual filenames during scan
-                            self.log_message(
-                                f"Warning: Error processing filename '{filename_obj}' in '{dirpath}' during chart scan: {inner_e}")
+                try:
+                    for dirpath, _, filenames in self.finder.fs.walk_path(fs_dir_path):
+                        for filename_obj in filenames:
+                            try:
+                                full_path = _build_full_path(str(dirpath), str(filename_obj))
+                                filename = os.path.basename(full_path)
+                                total_files_overall += 1
+                                path_files += 1
+                                _root, ext = os.path.splitext(filename)
+                                ext_label = ext.lower() if ext else self._("chart_label_no_extension", default="[No Ext]")
+                                all_file_counts.update([ext_label]) # Use update for Counter
+                            except Exception as inner_e:
+                                self.log_message(f"Warning: Error processing filename '{filename_obj}' in '{dirpath}' (Chart Scan): {inner_e}")
 
-            except Exception as e:
-                # Catch errors during the walk_path operation itself
-                scan_error = e
-                error_msg = self._("chart_error_cloud_scan", path=fs_dir_path, error=e,
-                                    default=f"Error scanning cloud path '{fs_dir_path}' for chart data: {e}")
-                self.log_message(error_msg)
-                self.log_message(f"Chart Scan Error Details: {traceback.format_exc()}")
-                if self.master.winfo_exists():
-                    error_title = self._("chart_error_title", default="Chart Error")
-                    # Schedule error popup in main thread
-                    self.master.after(10, lambda et=error_title, em=error_msg: messagebox.showerror(et, em,
-                                                                                                    master=self.master))
+                except Exception as e:
+                    path_error = e
+                    any_scan_error = True
+                    error_msg = self._("chart_error_cloud_scan", path=fs_dir_path, error=e, default=f"Error scanning '{fs_dir_path}' for chart: {e}")
+                    self.log_message(error_msg)
+                    self.log_message(f"Chart Scan Error Details ({fs_dir_path}): {traceback.format_exc()}")
+                    # Don't show popup here, maybe summarize errors later if desired
 
-            scan_duration = time.time() - scan_start_time
-            if not scan_error:
-                self.log_message(
-                    f"Chart data scan completed in {scan_duration:.2f}s. Found {total_files} files.")
+                scan_duration = time.time() - scan_start_time
+                if not path_error:
+                    self.log_message(self._("chart_status_scan_path_complete", path=fs_dir_path, default=f"Finished scanning path '{fs_dir_path}' ({path_files} files found, {scan_duration:.2f}s)."))
+                    processed_path_count += 1
+                else:
+                     self.log_message(f"Finished scanning path '{fs_dir_path}' with errors.")
 
-            # --- Schedule GUI Update (Chart Creation or Message) ---
+            # --- Scan finished for all paths ---
             def update_gui_after_chart_scan():
-                # Check if master window still exists before proceeding
                 if not self.master.winfo_exists(): return
-                # If scan failed, UI state reset is handled in finally block, just return
-                if scan_error: return
-
-                if not file_counts:
-                    # If scan succeeded but found no files
-                    no_files_msg = self._("chart_status_no_files_found", path=fs_dir_path,
-                                            default=f"No files found in '{fs_dir_path}'. Cannot generate chart.")
+                if not all_file_counts:
+                    no_files_msg = self._("chart_status_no_files_found", default="No files found in any scanned path. Cannot generate chart.")
                     self.log_message(no_files_msg)
-                    if self.master.winfo_exists(): messagebox.showinfo(
-                        self._("chart_info_title", default="Chart Info"), no_files_msg, master=self.master)
-                    return  # Don't try to create chart
+                    if self.master.winfo_exists(): messagebox.showinfo(self._("chart_info_title", default="Chart Info"), no_files_msg, master=self.master)
+                    return
 
-                # If scan succeeded and files were found, proceed to create chart
-                self.log_message(self._("chart_status_generating", count=len(file_counts), total=total_files,
-                                        default=f"Generating chart for {len(file_counts)} types ({total_files} files)..."))
-                self._create_pie_chart_window(file_counts, fs_dir_path)
+                # Generate chart using aggregated counts
+                self.log_message(self._("chart_status_generating", count=len(all_file_counts), total=total_files_overall, default=f"Generating chart for {len(all_file_counts)} types ({total_files_overall} files)..."))
+                # Use a generic title or list paths if few enough
+                chart_display_title = self._("chart_window_title", default="File Types in Scanned Paths") # Generic title now
+                self._create_pie_chart_window(all_file_counts, chart_display_title)
 
-            # Schedule the update function to run in the main GUI thread
             if self.master.winfo_exists():
                 self.master.after(0, update_gui_after_chart_scan)
 
         except Exception as e:
-            # Catch unexpected errors during worker setup/path calculation
-            err_msg = f"Unexpected error during chart worker setup for path '{scan_path_raw}': {e}"
+            err_msg = f"Unexpected error during chart worker: {e}"
             self.log_message(err_msg)
             self.log_message(traceback.format_exc())
             if self.master.winfo_exists():
                 error_title = self._("chart_error_title", default="Chart Error")
-                self.master.after(10, lambda et=error_title, em=err_msg: messagebox.showerror(et, em,
-                                                                                                master=self.master))
+                self.master.after(10, lambda et=error_title, em=err_msg: messagebox.showerror(et, em, master=self.master))
         finally:
-            # ALWAYS schedule UI state reset back to normal after worker finishes or errors out
             if self.master.winfo_exists():
                 self.master.after(0, self.set_ui_state, 'normal')
+    # <<< END MODIFICATION >>>
 
-    def _create_pie_chart_window(self, counts, display_path):
+
+    def _create_pie_chart_window(self, counts, display_path_or_title):
         """ Creates and displays the file type pie chart in a new Toplevel window. """
         if not MATPLOTLIB_AVAILABLE:
-            # Double-check availability right before creation
-            self.log_message("Error: Matplotlib became unavailable before chart creation.")
-            if self.master.winfo_exists():
-                messagebox.showerror(self._("chart_error_title", default="Chart Error"),
-                                        self._("chart_error_no_matplotlib",
-                                                default="Matplotlib library not found."), master=self.master)
+            self.log_message("Error: Matplotlib unavailable.")
+            if self.master.winfo_exists(): messagebox.showerror(self._("chart_error_title", default="Chart Error"), self._("chart_error_no_matplotlib", default="Matplotlib not found."), master=self.master)
             return
 
-        chart_window = None  # Initialize variable to hold the Toplevel window
+        chart_window = None
         try:
-            # --- Matplotlib Settings (Attempt, ignore errors if font setting fails) ---
             try:
-                # Ensure minus signs display correctly with CJK fonts
                 matplotlib.rcParams['axes.unicode_minus'] = False
-                # Get current font list and try to prepend preferred CJK fonts
                 current_sans_serif = matplotlib.rcParams['font.sans-serif']
-                preferred_fonts = ['SimHei', 'Microsoft YaHei', 'MS Gothic', 'Malgun Gothic',
-                                    'Arial Unicode MS', 'sans-serif']
-                # Build final list, adding preferred only if not already present
+                preferred_fonts = ['SimHei', 'Microsoft YaHei', 'MS Gothic', 'Malgun Gothic', 'Arial Unicode MS', 'sans-serif']
                 final_font_list = preferred_fonts + [f for f in current_sans_serif if f not in preferred_fonts]
                 matplotlib.rcParams['font.sans-serif'] = final_font_list
             except Exception as mpl_set_err:
-                self.log_message(f"Warning: Issue setting Matplotlib rcParams (e.g., fonts): {mpl_set_err}")
+                self.log_message(f"Warning: Issue setting Matplotlib rcParams: {mpl_set_err}")
 
-            # --- Data Preparation for Chart ---
-            top_n = 20  # Show top N extensions + "Others"
+            top_n = 20
             total_count = sum(counts.values())
-            # Get extensions sorted by count, descending
             sorted_counts = counts.most_common()
 
-            chart_labels = []  # Labels for wedges (extensions or "Others")
-            chart_sizes = []  # Corresponding counts for wedges
-            legend_labels_with_counts = []  # Labels for the legend (e.g., ".txt (150)")
-
+            chart_labels, chart_sizes, legend_labels_with_counts = [], [], []
             others_label = self._("chart_label_others", default="Others")
             others_count = 0
-            others_sources = []  # List of extensions grouped into "Others"
+            others_sources = []
 
-            # Group less frequent extensions into "Others" if necessary
             if len(sorted_counts) > top_n:
                 top_items = sorted_counts[:top_n]
                 chart_labels = [item[0] for item in top_items]
                 chart_sizes = [item[1] for item in top_items]
                 legend_labels_with_counts = [f'{item[0]} ({item[1]})' for item in top_items]
-
                 other_items = sorted_counts[top_n:]
                 others_count = sum(item[1] for item in other_items)
                 others_sources = [item[0] for item in other_items]
-
                 if others_count > 0:
                     chart_labels.append(others_label)
                     chart_sizes.append(others_count)
                     legend_labels_with_counts.append(f'{others_label} ({others_count})')
             else:
-                # If fewer than top_n extensions, show all
                 chart_labels = [item[0] for item in sorted_counts]
                 chart_sizes = [item[1] for item in sorted_counts]
                 legend_labels_with_counts = [f'{item[0]} ({item[1]})' for item in sorted_counts]
 
-            # Log if grouping occurred
-            if others_count > 0:
-                self.log_message(
-                    f"Chart Note: Grouped {len(others_sources)} smaller file types ({others_count} files) into '{others_label}'.")
+            if others_count > 0: self.log_message(f"Chart Note: Grouped {len(others_sources)} types ({others_count} files) into '{others_label}'.")
 
-            # --- Create Chart Window (Toplevel) ---
             chart_window = Toplevel(self.master)
-            chart_window.title(
-                self._("chart_window_title", path=display_path, default=f"File Types in {display_path}"))
-            chart_window.geometry("900x700")  # Initial size
-            chart_window.minsize(600, 400)  # Minimum size
+            # Use the passed title directly
+            chart_window.title(display_path_or_title)
+            chart_window.geometry("900x700")
+            chart_window.minsize(600, 400)
 
-            # --- Create Matplotlib Figure & Axes ---
-            fig = Figure(figsize=(9, 7), dpi=100)  # Adjust figsize as needed
+            fig = Figure(figsize=(9, 7), dpi=100)
             ax = fig.add_subplot(111)
 
-            # --- Generate Pie Chart ---
-            explode_value = 0.02  # Slight separation between slices
-            # Create explode list, same length as labels
+            explode_value = 0.02
             explode_list = [explode_value] * len(chart_labels)
-            # Don't explode the 'Others' slice if it exists
             if others_count > 0 and others_label in chart_labels:
-                try:
-                    others_index = chart_labels.index(others_label)
-                    explode_list[others_index] = 0
-                except ValueError:
-                    pass  # Should not happen, but safe check
+                try: explode_list[chart_labels.index(others_label)] = 0
+                except ValueError: pass
 
-            # Create the pie chart
             wedges, texts, autotexts = ax.pie(
-                chart_sizes,
-                explode=explode_list,
-                labels=None,  # Use legend instead of direct labels on slices
+                chart_sizes, explode=explode_list, labels=None,
                 autopct=lambda pct: f"{pct:.1f}%" if pct > 1.5 else '',
-                # Show percentage only for slices > 1.5%
-                startangle=140,  # Rotate start position
-                pctdistance=0.85,  # Position of percentage labels inside slice
-                # Add doughnut effect and white edges for visual separation
+                startangle=140, pctdistance=0.85,
                 wedgeprops=dict(width=0.6, edgecolor='w')
             )
-            ax.axis('equal')  # Ensure pie is drawn as a circle
+            ax.axis('equal')
 
-            # --- Create Legend ---
-            legend = ax.legend(wedges, legend_labels_with_counts,  # Use the labels with counts
-                                title=self._("chart_legend_title", default="File Extensions"),
-                                loc="center left",
-                                bbox_to_anchor=(1, 0, 0.5, 1),
-                                # Position legend outside the plot area to the right
-                                fontsize='small',  # Adjust font size
-                                frameon=True,  # Add frame around legend
-                                labelspacing=0.8  # Adjust spacing between legend items
-                                )
+            legend = ax.legend(wedges, legend_labels_with_counts,
+                                title=self._("chart_legend_title", default="Extensions"),
+                                loc="center left", bbox_to_anchor=(1, 0, 0.5, 1),
+                                fontsize='small', frameon=True, labelspacing=0.8)
 
-            # --- Style Percentage Labels (Autotexts) ---
             for autotext in autotexts:
-                if autotext.get_text():  # Check if text exists (due to lambda autopct)
+                if autotext.get_text():
                     autotext.set_color('white')
                     autotext.set_fontsize(8)
                     autotext.set_weight('bold')
-                    # Add semi-transparent background for readability
                     autotext.set_bbox(dict(facecolor='black', alpha=0.5, pad=1, edgecolor='none'))
 
-            # --- Add Chart Title ---
-            chart_title = self._("chart_window_title", path=display_path,
-                                    default=f"File Types in {display_path}")
-            chart_title += f"\n(Total Files: {total_count})"  # Add total file count
-            ax.set_title(chart_title, pad=20, fontsize=12)  # Adjust padding and font size
+            # Use the passed title for the chart itself too
+            chart_title = f"{display_path_or_title}\n(Total Files: {total_count})"
+            ax.set_title(chart_title, pad=20, fontsize=12)
 
-            # --- Adjust Layout to Prevent Overlap ---
-            try:
-                # Adjust right margin to make space for the legend
-                fig.tight_layout(rect=[0, 0, 0.75, 1])
+            try: fig.tight_layout(rect=[0, 0, 0.75, 1])
             except Exception as layout_err:
                 print(f"Warning: Chart layout adjustment failed: {layout_err}.")
                 self.log_message(f"Warning: Chart layout adjustment failed: {layout_err}")
 
-            # --- Embed Matplotlib Chart in Tkinter Window ---
-            canvas = FigureCanvasTkAgg(fig, master=chart_window)  # Create Tkinter canvas
-            canvas_widget = canvas.get_tk_widget()  # Get the Tkinter widget from the canvas
-
-            # Add Matplotlib navigation toolbar (optional but useful)
+            canvas = FigureCanvasTkAgg(fig, master=chart_window)
+            canvas_widget = canvas.get_tk_widget()
             toolbar = NavigationToolbar2Tk(canvas, chart_window)
-            toolbar.update()  # Finalize toolbar
-
-            # Pack toolbar and canvas into the Toplevel window
+            toolbar.update()
             toolbar.pack(side=tk.BOTTOM, fill=tk.X)
             canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-            canvas.draw()  # Draw the chart onto the canvas
-
-            # Bring the chart window to the front
+            canvas.draw()
             chart_window.focus_set()
             chart_window.lift()
 
-
         except Exception as e:
-            # Catch any error during chart creation/display
             error_msg = f"Error creating or displaying chart window: {e}"
             self.log_message(error_msg)
             self.log_message(traceback.format_exc())
             if self.master.winfo_exists():
-                # Break the messagebox call for better readability
-                messagebox.showerror(
-                    title=self._("chart_error_title", default="Chart Error"),
-                    message=error_msg,
-                    master=self.master
-                )
-            # Attempt to destroy the Toplevel window if it was created but failed mid-process
+                messagebox.showerror(title=self._("chart_error_title", default="Chart Error"), message=error_msg, master=self.master)
             if chart_window and chart_window.winfo_exists():
-                try:
-                    chart_window.destroy()
-                except tk.TclError:  # Be slightly more specific if possible
-                    pass  # Ignore error if window is already gone
-                except Exception as destroy_e:  # Catch other potential errors during destroy
-                    print(f"Warning: Error trying to destroy chart window after creation failure: {destroy_e}")
-                    pass
+                try: chart_window.destroy()
+                except Exception: pass
 # --- End of DuplicateFinderApp Class ---
 
 
 # --- Main Execution Block ---
 if __name__ == "__main__":
-    # --- Attempt High DPI Awareness (Windows) ---
     try:
         from ctypes import windll
-        try:
-            # Windows 8.1+
-            windll.shcore.SetProcessDpiAwareness(1)
+        try: windll.shcore.SetProcessDpiAwareness(1)
         except AttributeError:
-            try:
-                # Windows Vista/7
-                windll.user32.SetProcessDPIAware()
-            except AttributeError:
-                # DPI awareness setting not available/needed on this OS or version
-                pass
-    except (ImportError, AttributeError):
-        # Not on Windows or ctypes issue, DPI awareness not applicable
-        pass
+            try: windll.user32.SetProcessDPIAware()
+            except AttributeError: pass
+    except (ImportError, AttributeError): pass
 
-    # --- Initialize Tkinter Root Window ---
     root = tk.Tk()
     try:
-        # --- Basic Sanity Check for Translations ---
-        # Ensure core keys exist to prevent crashing if translation file is broken
-        if not translations["en"].get("window_title") \
-                or not translations["zh"].get("window_title"):
-
-            print("ERROR: Core translations appear missing. Exiting.")
-            # Attempt to show a GUI error message even if translations are broken
+        if not translations["en"].get("window_title") or not translations["zh"].get("window_title"):
+            print("ERROR: Core translations missing. Exiting.")
             try:
-                # Create a temporary, hidden root for the error message
                 root_err = tk.Tk()
                 root_err.withdraw()
-                messagebox.showerror(
-                    title="Fatal Error",  # Use basic English title if translations fail
-                    message="Core translation strings missing. Cannot start application.",
-                    master=root_err
-                )
+                messagebox.showerror(title="Fatal Error", message="Core translation strings missing.", master=root_err)
                 root_err.destroy()
-            except Exception as mb_init_err:
-                # Ignore errors showing the initial error message itself
-                print(f"Could not display initial translation error in GUI: {mb_init_err}")
-            sys.exit(1)  # Exit cleanly with error code
+            except Exception: pass
+            sys.exit(1)
 
-        # --- Create and Run the Application ---
-        app = DuplicateFinderApp(root) # Now this should work
-        root.mainloop()  # Start the Tkinter event loop
+        app = DuplicateFinderApp(root)
+        root.mainloop()
 
     except Exception as main_e:
-        # --- Catch-all for Fatal Errors during Application Initialization or Runtime ---
         print("\n" + "=" * 30 + " FATAL APPLICATION ERROR " + "=" * 30)
-        print(traceback.format_exc())  # Print full traceback to console
+        print(traceback.format_exc())
         print("=" * 80 + "\n")
-
-        # Attempt to show a final error message in a popup
         try:
-            # Create a temporary, hidden root for the final error message
             root_err = tk.Tk()
             root_err.withdraw()
-            # Format the error message clearly
-            error_details = f"A critical error occurred and the application must close:\n\n{type(main_e).__name__}: {main_e}"
-            messagebox.showerror(
-                title="Fatal Error",
-                message=error_details,
-                master=root_err
-            )
+            error_details = f"A critical error occurred:\n\n{type(main_e).__name__}: {main_e}"
+            messagebox.showerror(title="Fatal Error", message=error_details, master=root_err)
             root_err.destroy()
         except Exception as mb_err:
-            # If even the error popup fails, log it to console
-            print(f"CRITICAL: Could not display the fatal error message in GUI: {mb_err}")
-
-        sys.exit(1)  # Exit with error status
+            print(f"CRITICAL: Could not display fatal error message in GUI: {mb_err}")
+        sys.exit(1)
