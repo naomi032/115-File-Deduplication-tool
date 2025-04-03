@@ -2973,4 +2973,4 @@ if __name__ == "__main__":
             root_err.destroy()
         except Exception as mb_err:
             print(f"CRITICAL: Could not display fatal error message in GUI: {mb_err}")
-        sys.exit(1)/
+        sys.exit(1)
